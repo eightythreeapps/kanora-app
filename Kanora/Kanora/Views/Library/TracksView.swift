@@ -111,7 +111,7 @@ struct TracksView: View {
                 if track.trackNumber > 0 {
                     Text("\(track.trackNumber)")
                         .foregroundColor(.secondary)
-                        .frame(width: 24, alignment: .leading)
+                        .monospacedDigit()
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -133,7 +133,8 @@ struct TracksView: View {
                     .lineLimit(1)
             }
             .contentShape(Rectangle())
-            .padding(.vertical, 2)
+            .padding(.horizontal)
+            .padding(.vertical, 8)
         }
     }
 
@@ -182,7 +183,14 @@ struct TracksView: View {
                 }
                 Spacer()
             } else {
-                tracksContent
+                ZStack(alignment: .bottom) {
+                    tracksContent
+                    // Add spacer for floating player
+                    Rectangle()
+                        .fill(Color.clear)
+                        .frame(height: 100)
+                        .allowsHitTesting(false)
+                }
             }
         }
         .navigationTitle(L10n.Library.tracksTitle)

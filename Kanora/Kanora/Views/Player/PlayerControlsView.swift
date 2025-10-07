@@ -21,7 +21,7 @@ struct PlayerControlsView: View {
     }
 
     var body: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 12) {
             // Now playing info
             HStack(spacing: 12) {
                 // Album art placeholder
@@ -50,7 +50,7 @@ struct PlayerControlsView: View {
                         .foregroundColor(.secondary)
                 }
             }
-            .frame(width: 250, alignment: .leading)
+            .frame(minWidth: 150, idealWidth: 250, maxWidth: 300)
 
             Spacer()
 
@@ -91,7 +91,7 @@ struct PlayerControlsView: View {
                             viewModel.seek(to: viewModel.currentTime)
                         }
                     }
-                    .frame(width: 300)
+                    .frame(minWidth: 150, idealWidth: 300, maxWidth: 400)
                     .disabled(viewModel.currentTrack == nil)
 
                     Text(viewModel.durationFormatted)
@@ -111,9 +111,9 @@ struct PlayerControlsView: View {
                 .buttonStyle(.plain)
 
                 Slider(value: $viewModel.volume, in: 0...1)
-                    .frame(width: 100)
+                    .frame(minWidth: 60, idealWidth: 100, maxWidth: 120)
             }
-            .frame(width: 250, alignment: .trailing)
+            .frame(minWidth: 100, idealWidth: 150, maxWidth: 200)
         }
         .padding()
 #if os(macOS)
@@ -121,7 +121,7 @@ struct PlayerControlsView: View {
 #else
         .background(Color(.systemBackground))
 #endif
-        .frame(height: 80)
+        .frame(minHeight: 80, idealHeight: 80, maxHeight: 100)
     }
 }
 

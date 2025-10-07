@@ -35,14 +35,19 @@ struct PlaylistsView: View {
                 }
                 Spacer()
             } else {
-                List(playlists) { playlist in
-                    NavigationLink {
-                        PlaylistDetailView(playlist: playlist)
-                    } label: {
-                        PlaylistRowView(playlist: playlist)
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(playlists) { playlist in
+                            NavigationLink {
+                                PlaylistDetailView(playlist: playlist)
+                            } label: {
+                                PlaylistRowView(playlist: playlist)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
+                    .padding(.bottom, 100)
                 }
-                .listStyle(.plain)
             }
         }
         .navigationTitle(L10n.Library.playlistsTitle)
@@ -67,7 +72,7 @@ struct PlaylistRowView: View {
         HStack(spacing: 12) {
             RoundedRectangle(cornerRadius: 4)
                 .fill(Color.accentColor.opacity(0.2))
-                .frame(width: 40, height: 40)
+                .aspectRatio(1, contentMode: .fit)
                 .overlay {
                     Image(systemName: "music.note.list")
                         .foregroundColor(.accentColor)
@@ -84,7 +89,8 @@ struct PlaylistRowView: View {
 
             Spacer()
         }
-        .padding(.vertical, 4)
+        .padding(.horizontal)
+        .padding(.vertical, 8)
     }
 }
 

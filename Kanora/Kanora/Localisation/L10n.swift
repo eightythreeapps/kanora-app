@@ -295,6 +295,7 @@ enum L10n {
         static let artistDetailMessage = LocalizedStringKey("placeholders.artist_detail_message")
         static let albumDetailMessage = LocalizedStringKey("placeholders.album_detail_message")
         static let playlistDetailMessage = LocalizedStringKey("placeholders.playlist_detail_message")
+        static let selectArtistMessage = LocalizedStringKey("placeholders.select_artist_message")
     }
 
     // MARK: - Common

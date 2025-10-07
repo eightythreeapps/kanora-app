@@ -10,42 +10,74 @@ import SwiftUI
 /// Routes navigation destinations to appropriate views
 struct ContentRouter: View {
     let destination: NavigationDestination
+    let services: ServiceContainer
+    @ObservedObject var navigationState: NavigationState
+
+    init(destination: NavigationDestination, services: ServiceContainer, navigationState: NavigationState) {
+        self.destination = destination
+        self.services = services
+        self.navigationState = navigationState
+    }
 
     var body: some View {
-        switch destination {
-        case .artists:
-            ArtistsView()
-        case .albums:
-            AlbumsView()
-        case .tracks:
-            TracksView()
-        case .playlists:
-            PlaylistsView()
-        case .cdRipping:
-            PlaceholderView(
-                icon: "opticaldiscdrive",
-                title: L10n.Navigation.cdRipping,
-                message: L10n.Placeholders.cdRippingMessage
-            )
-        case .importFiles:
-            PlaceholderView(
-                icon: "square.and.arrow.down",
-                title: L10n.Navigation.importFiles,
-                message: L10n.Placeholders.importFilesMessage
-            )
-        case .preferences:
-            PlaceholderView(
-                icon: "gearshape",
-                title: L10n.Navigation.preferences,
-                message: L10n.Placeholders.preferencesMessage
-            )
-        case .apiServer:
-            PlaceholderView(
-                icon: "server.rack",
-                title: L10n.Navigation.apiServer,
-                message: L10n.Placeholders.apiServerMessage
-            )
+        Group {
+            // Check for artist/album selection first
+            if destination == .artists, let album = navigationState.selectedAlbum {
+                AlbumDetailView(album: album)
+            } else if destination == .artists, let artist = navigationState.selectedArtist {
+                ArtistDetailView(artist: artist)
+            } else {
+                // Default destination routing
+                switch destination {
+                case .artists:
+                    emptySelection(icon: "music.mic", message: L10n.Placeholders.selectArtistMessage)
+                case .albums:
+                    AlbumsView()
+                case .tracks:
+                    TracksView()
+                case .playlists:
+                    PlaylistsView()
+                case .nowPlaying:
+                    NowPlayingView(services: services)
+                case .cdRipping:
+                    PlaceholderView(
+                        icon: "opticaldiscdrive",
+                        title: L10n.Navigation.cdRipping,
+                        message: L10n.Placeholders.cdRippingMessage
+                    )
+                case .importFiles:
+                    PlaceholderView(
+                        icon: "square.and.arrow.down",
+                        title: L10n.Navigation.importFiles,
+                        message: L10n.Placeholders.importFilesMessage
+                    )
+                case .preferences:
+                    PlaceholderView(
+                        icon: "gearshape",
+                        title: L10n.Navigation.preferences,
+                        message: L10n.Placeholders.preferencesMessage
+                    )
+                case .apiServer:
+                    PlaceholderView(
+                        icon: "server.rack",
+                        title: L10n.Navigation.apiServer,
+                        message: L10n.Placeholders.apiServerMessage
+                    )
+                }
+            }
         }
+    }
+
+    private func emptySelection(icon: String, message: LocalizedStringKey) -> some View {
+        VStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 64))
+                .foregroundColor(.secondary)
+            Text(message)
+                .font(.headline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
 
@@ -73,13 +105,21 @@ struct PlaceholderView: View {
 }
 
 #Preview("Artists") {
-    NavigationView {
-        ContentRouter(destination: .artists)
+    let persistence = PersistenceController.preview
+    let services = ServiceContainer(persistence: persistence)
+    let navigationState = NavigationState()
+    return NavigationView {
+        ContentRouter(destination: .artists, services: services, navigationState: navigationState)
     }
+    .environmentObject(navigationState)
 }
 
 #Preview("Placeholder") {
-    NavigationView {
-        ContentRouter(destination: .cdRipping)
+    let persistence = PersistenceController.preview
+    let services = ServiceContainer(persistence: persistence)
+    let navigationState = NavigationState()
+    return NavigationView {
+        ContentRouter(destination: .cdRipping, services: services, navigationState: navigationState)
     }
+    .environmentObject(navigationState)
 }

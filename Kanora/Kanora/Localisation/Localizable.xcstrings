@@ -14,6 +14,9 @@
     "%d" : {
 
     },
+    "%d kbps" : {
+
+    },
     "%lld" : {
 
     },
@@ -1606,6 +1609,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Playlist detail view - Coming soon"
+          }
+        }
+      }
+    },
+    "placeholders.select_artist_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select an artist to view albums"
           }
         }
       }

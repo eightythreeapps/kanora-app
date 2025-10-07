@@ -60,6 +60,9 @@ enum NavigationDestination: Hashable {
     case cdRipping
     case importFiles
 
+    // Player
+    case nowPlaying
+
     // Settings
     case preferences
     case apiServer
@@ -70,6 +73,8 @@ enum NavigationDestination: Hashable {
 class NavigationState: ObservableObject {
     @Published var selectedDestination: NavigationDestination = .artists
     @Published var selectedPlaylist: Playlist?
+    @Published var selectedArtist: Artist?
+    @Published var selectedAlbum: Album?
 
     // Navigation items organized by section
     let navigationItems: [NavigationSection: [NavigationItem]] = [
@@ -132,10 +137,24 @@ class NavigationState: ObservableObject {
     func navigate(to destination: NavigationDestination) {
         selectedDestination = destination
         selectedPlaylist = nil
+        selectedArtist = nil
+        selectedAlbum = nil
     }
 
     func selectPlaylist(_ playlist: Playlist) {
         selectedDestination = .playlists
         selectedPlaylist = playlist
+        selectedArtist = nil
+        selectedAlbum = nil
+    }
+
+    func selectArtist(_ artist: Artist) {
+        selectedDestination = .artists
+        selectedArtist = artist
+        selectedAlbum = nil
+    }
+
+    func selectAlbum(_ album: Album) {
+        selectedAlbum = album
     }
 }

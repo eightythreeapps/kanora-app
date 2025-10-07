@@ -16,6 +16,7 @@ import UIKit
 
 struct ArtistsView: View {
     @Environment(\.managedObjectContext) private var viewContext
+    @EnvironmentObject private var navigationState: NavigationState
 
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Artist.sortName, ascending: true)],
@@ -78,14 +79,19 @@ struct ArtistsView: View {
                 }
                 Spacer()
             } else {
-                List(filteredArtists) { artist in
-                    NavigationLink {
-                        ArtistDetailView(artist: artist)
-                    } label: {
-                        ArtistRowView(artist: artist)
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(filteredArtists) { artist in
+                            Button(action: {
+                                navigationState.selectArtist(artist)
+                            }) {
+                                ArtistRowView(artist: artist)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
+                    .padding(.bottom, 100)
                 }
-                .listStyle(.plain)
             }
         }
         .navigationTitle(L10n.Library.artistsTitle)
@@ -98,6 +104,12 @@ struct ArtistsView: View {
                 }
             }
         }
+        .onAppear {
+            // Auto-select first artist if none selected
+            if navigationState.selectedArtist == nil, let first = filteredArtists.first {
+                navigationState.selectArtist(first)
+            }
+        }
     }
 }
 
@@ -107,11 +119,12 @@ struct ArtistRowView: View {
     var body: some View {
         HStack(spacing: 12) {
             // Placeholder album art
-            RoundedRectangle(cornerRadius: 4)
+            Circle()
                 .fill(Color.secondary.opacity(0.2))
-                .frame(width: 40, height: 40)
+                .frame(width: 80, height: 80)
                 .overlay {
                     Image(systemName: "music.mic")
+                        .font(.title)
                         .foregroundColor(.secondary)
                 }
 
@@ -137,33 +150,119 @@ struct ArtistRowView: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
-        .padding(.vertical, 4)
+        .padding(.horizontal)
+        .padding(.vertical, 8)
     }
 }
 
 struct ArtistDetailView: View {
     let artist: Artist
+    @EnvironmentObject private var navigationState: NavigationState
+
+    private var albums: [Album] {
+        guard let albumsSet = artist.albums as? Set<Album> else { return [] }
+        return albumsSet.sorted { album1, album2 in
+            // Sort by year, then by title
+            if album1.year != album2.year {
+                return album1.year < album2.year
+            }
+            return (album1.title ?? "") < (album2.title ?? "")
+        }
+    }
+
+    let columns = [
+        GridItem(.adaptive(minimum: 150, maximum: 200), spacing: 16)
+    ]
 
     var body: some View {
-        VStack {
-            Text(artist.name ?? String(localized: "library.unknown_artist"))
-                .font(.largeTitle)
-            Text(L10n.Placeholders.artistDetailMessage)
-                .foregroundColor(.secondary)
+        VStack(spacing: 0) {
+            // Artist header
+            HStack(alignment: .center, spacing: 24) {
+                // Large artist icon
+                Circle()
+                    .fill(Color.secondary.opacity(0.2))
+                    .frame(width: 140, height: 140)
+                    .overlay {
+                        Image(systemName: "music.mic")
+                            .font(.system(size: 56))
+                            .foregroundColor(.secondary)
+                    }
+
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(artist.name ?? String(localized: "library.unknown_artist"))
+                        .font(.largeTitle.bold())
+
+                    HStack(spacing: 16) {
+                        Label(L10n.Library.albumCount(albums.count), systemImage: "square.stack")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+
+                        Label(L10n.Library.trackCount(artist.trackCount), systemImage: "music.note")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                }
+
+                Spacer()
+            }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 24)
+
+            Divider()
+
+            // Albums grid
+            if albums.isEmpty {
+                Spacer()
+                VStack(spacing: 12) {
+                    Image(systemName: "square.stack")
+                        .font(.system(size: 48))
+                        .foregroundColor(.secondary)
+                    Text(L10n.Library.albumsEmpty)
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                }
+                Spacer()
+            } else {
+                ScrollView {
+                    LazyVGrid(columns: columns, spacing: 16) {
+                        ForEach(albums) { album in
+                            Button(action: {
+                                navigationState.selectAlbum(album)
+                            }) {
+                                AlbumGridItem(album: album)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding()
+                    .padding(.bottom, 100)
+                }
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .navigationTitle(artist.name ?? String(localized: "library.unknown_artist"))
     }
 }
 
-#Preview("Populated") {
-    NavigationView {
+#Preview("Artists - Populated") {
+    let navigationState = NavigationState()
+    return NavigationView {
         PreviewFactory.makeArtistsView(state: .populated)
     }
+    .environmentObject(navigationState)
 }
 
-#Preview("Empty") {
-    NavigationView {
+#Preview("Artists - Empty") {
+    let navigationState = NavigationState()
+    return NavigationView {
         PreviewFactory.makeArtistsView(state: .empty)
     }
+    .environmentObject(navigationState)
+}
+
+#Preview("Artist Detail") {
+    let navigationState = NavigationState()
+    return NavigationView {
+        PreviewFactory.makeArtistDetailView(state: .populated)
+    }
+    .environmentObject(navigationState)
 }

@@ -12,6 +12,13 @@ import CoreData
 struct KanoraApp: App {
     let persistenceController = PersistenceController.shared
 
+    init() {
+        // Seed test data in debug mode
+        #if DEBUG
+        seedTestDataIfNeeded()
+        #endif
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
@@ -80,6 +87,27 @@ struct KanoraApp: App {
                 }
                 .keyboardShortcut(.downArrow, modifiers: .command)
             }
+        }
+    }
+
+    // MARK: - Private Methods
+
+    private func seedTestDataIfNeeded() {
+        let context = persistenceController.container.viewContext
+
+        // Check if data already exists
+        let userRequest = User.fetchRequest()
+        userRequest.predicate = NSPredicate(format: "username == %@", "TestUser")
+
+        do {
+            let existingUsers = try context.fetch(userRequest)
+            if existingUsers.isEmpty {
+                // No test data exists, seed it
+                try TestDataSeeder.seedOasisDiscography(in: context)
+            }
+        } catch {
+            // Log error but don't crash the app
+            print("Error checking or seeding test data: \(error)")
         }
     }
 }

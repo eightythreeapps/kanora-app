@@ -53,11 +53,54 @@ struct PreviewFactory {
             .designSystem()
     }
 
+    /// Creates ArtistDetailView with preview data
+    static func makeArtistDetailView(state: PreviewState = .populated) -> some View {
+        let container = createContainer(for: state)
+        let context = container.viewContext
+
+        // Fetch first artist
+        let fetchRequest = Artist.fetchRequest()
+        fetchRequest.fetchLimit = 1
+        let artist = (try? context.fetch(fetchRequest))?.first ?? Artist(
+            name: "Sample Artist",
+            library: Library(name: "Sample", path: "/", user: User(username: "test", context: context), context: context),
+            context: context
+        )
+
+        return ArtistDetailView(artist: artist)
+            .environment(\.managedObjectContext, context)
+            .designSystem()
+    }
+
     /// Creates AlbumsView with preview data
     static func makeAlbumsView(state: PreviewState = .populated) -> some View {
         let container = createContainer(for: state)
         return AlbumsView()
             .environment(\.managedObjectContext, container.viewContext)
+            .designSystem()
+    }
+
+    /// Creates AlbumDetailView with preview data
+    static func makeAlbumDetailView(state: PreviewState = .populated) -> some View {
+        let container = createContainer(for: state)
+        let context = container.viewContext
+
+        // Fetch first album
+        let fetchRequest = Album.fetchRequest()
+        fetchRequest.fetchLimit = 1
+        let album = (try? context.fetch(fetchRequest))?.first ?? Album(
+            title: "Sample Album",
+            artist: Artist(
+                name: "Sample Artist",
+                library: Library(name: "Sample", path: "/", user: User(username: "test", context: context), context: context),
+                context: context
+            ),
+            year: 2024,
+            context: context
+        )
+
+        return AlbumDetailView(album: album)
+            .environment(\.managedObjectContext, context)
             .designSystem()
     }
 
@@ -92,6 +135,17 @@ struct PreviewFactory {
             .designSystem()
     }
 
+    /// Creates NowPlayingView with preview data
+    static func makeNowPlayingView(state: PreviewState = .populated) -> some View {
+        let container = createContainer(for: state)
+        let persistence = PersistenceController(inMemory: true)
+        let services = ServiceContainer(persistence: persistence)
+
+        return NowPlayingView(services: services)
+            .environment(\.managedObjectContext, container.viewContext)
+            .designSystem()
+    }
+
     // MARK: - Private Helpers
 
     /// Creates an in-memory Core Data container with test data based on state
@@ -123,7 +177,7 @@ struct PreviewFactory {
     /// Generates test data in the given context based on preview state
     private static func generateTestData(for state: PreviewState, in context: NSManagedObjectContext) {
         // Create data graph using TestDataBuilder
-        let (_, library) = TestDataBuilder.createDataGraph(for: state, in: context)
+        _ = TestDataBuilder.createDataGraph(for: state, in: context)
 
         // For populated, loading, and error states, add playlists with tracks
         if state == .populated || state == .loading || state == .error {
