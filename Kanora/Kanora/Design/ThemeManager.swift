@@ -19,6 +19,8 @@ public class ThemeManager: ObservableObject {
     @Published public private(set) var currentTheme: any Theme
     @Published public private(set) var availableThemes: [any Theme] = []
 
+    private let logger = AppLogger.designSystem
+
     private let userDefaults = UserDefaults.standard
     private let themeKey = "SelectedThemeID"
 
@@ -52,7 +54,7 @@ public class ThemeManager: ObservableObject {
     /// Switch to theme by ID
     public func setTheme(withID themeID: String) {
         guard let theme = availableThemes.first(where: { $0.id == themeID }) else {
-            print("⚠️ Theme with ID '\(themeID)' not found")
+            logger.warning("⚠️ Theme with ID '\(themeID)' not found")
             return
         }
         setTheme(theme)

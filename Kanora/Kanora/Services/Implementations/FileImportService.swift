@@ -14,6 +14,7 @@ import UniformTypeIdentifiers
 /// Service for importing audio files into the library
 class FileImportService: FileImportServiceProtocol {
     private let persistence: PersistenceController
+    private let logger = AppLogger.fileImport
 
     init(persistence: PersistenceController) {
         self.persistence = persistence
@@ -27,18 +28,18 @@ class FileImportService: FileImportServiceProtocol {
         in context: NSManagedObjectContext,
         mode: ImportMode
     ) -> AnyPublisher<ImportProgress, Error> {
-        print("🎵 FileImportService.importFiles called with \(urls.count) URLs")
-        print("📋 Import mode: \(mode.displayName)")
+        logger.debug("🎵 FileImportService.importFiles called with \(urls.count) URLs")
+        logger.debug("📋 Import mode: \(mode.displayName)")
         let subject = PassthroughSubject<ImportProgress, Error>()
 
         // Perform import in background
         Task {
-            print("📦 Starting background import task")
+            logger.debug("📦 Starting background import task")
             do {
                 try await performImport(urls, into: library, mode: mode, progress: subject)
-                print("✅ performImport completed successfully")
+                logger.info("✅ performImport completed successfully")
             } catch {
-                print("❌ performImport failed: \(error.localizedDescription)")
+                logger.error("❌ performImport failed: \(error.localizedDescription)")
                 subject.send(completion: .failure(error))
             }
         }
@@ -54,21 +55,21 @@ class FileImportService: FileImportServiceProtocol {
     }
 
     func extractMetadata(from url: URL) throws -> AudioMetadata {
-        print("🎼 extractMetadata called for: \(url.lastPathComponent)")
-        print("📍 URL path: \(url.path)")
-        print("🔓 URL is file URL: \(url.isFileURL)")
+        logger.debug("🎼 extractMetadata called for: \(url.lastPathComponent)")
+        logger.debug("📍 URL path: \(url.path)")
+        logger.debug("🔓 URL is file URL: \(url.isFileURL)")
 
         let asset = AVURLAsset(url: url)
-        print("✅ Created AVURLAsset")
+        logger.info("✅ Created AVURLAsset")
 
         // Get duration
         let duration = asset.duration.seconds
-        print("⏱️ Duration: \(duration)s")
+        logger.debug("⏱️ Duration: \(duration)s")
 
         // Get file size
-        print("📏 Getting file size...")
+        logger.debug("📏 Getting file size...")
         let fileSize = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
-        print("📦 File size: \(fileSize) bytes")
+        logger.debug("📦 File size: \(fileSize) bytes")
 
         // Extract metadata
         var title: String?
@@ -95,7 +96,7 @@ class FileImportService: FileImportServiceProtocol {
                 case "artwork":
                     // Extract artwork data
                     if let data = item.dataValue {
-                        print("🎨 Found artwork in common metadata: \(data.count) bytes")
+                        logger.debug("🎨 Found artwork in common metadata: \(data.count) bytes")
                         artworkData = data
                     }
                 default:
@@ -105,18 +106,18 @@ class FileImportService: FileImportServiceProtocol {
 
             // Always check identifiers for track number, disc number, etc.
             if let identifier = item.identifier?.rawValue {
-                print("🔍 Common metadata identifier: \(identifier)")
+                logger.debug("🔍 Common metadata identifier: \(identifier)")
 
                 // Track number - ALAC uses 'trkn', iTunes uses 'com.apple.iTunes.track-number'
                 if trackNumber == nil && (identifier.contains("trackNumber") || identifier.contains("trkn") || identifier == "com.apple.iTunes.track-number") {
                     if let value = item.numberValue {
                         trackNumber = value.intValue
-                        print("🔢 Found track number in common metadata (number): \(trackNumber!)")
+                        logger.debug("🔢 Found track number in common metadata (number): \(trackNumber!)")
                     } else if let stringValue = item.stringValue {
                         let components = stringValue.components(separatedBy: "/")
                         if let value = Int(components[0]) {
                             trackNumber = value
-                            print("🔢 Found track number in common metadata (string): \(trackNumber!)")
+                            logger.debug("🔢 Found track number in common metadata (string): \(trackNumber!)")
                         }
                     } else if let data = item.dataValue {
                         // ALAC stores track numbers as binary data in iTunes-style 'trkn' atom
@@ -126,7 +127,7 @@ class FileImportService: FileImportServiceProtocol {
                             let trackNum = Int(bytes[2]) * 256 + Int(bytes[3])
                             if trackNum > 0 {
                                 trackNumber = trackNum
-                                print("🔢 Found track number in common metadata (binary): \(trackNumber!) from \(data.count) bytes")
+                                logger.debug("🔢 Found track number in common metadata (binary): \(trackNumber!) from \(data.count) bytes")
                             }
                         }
                     }
@@ -136,12 +137,12 @@ class FileImportService: FileImportServiceProtocol {
                 if discNumber == nil && (identifier.contains("discNumber") || identifier.contains("disk") || identifier == "com.apple.iTunes.disc-number") {
                     if let value = item.numberValue {
                         discNumber = value.intValue
-                        print("💿 Found disc number in common metadata (number): \(discNumber!)")
+                        logger.debug("💿 Found disc number in common metadata (number): \(discNumber!)")
                     } else if let stringValue = item.stringValue {
                         let components = stringValue.components(separatedBy: "/")
                         if let value = Int(components[0]) {
                             discNumber = value
-                            print("💿 Found disc number in common metadata (string): \(discNumber!)")
+                            logger.debug("💿 Found disc number in common metadata (string): \(discNumber!)")
                         }
                     }
                 }
@@ -149,10 +150,10 @@ class FileImportService: FileImportServiceProtocol {
         }
 
         // Try all available metadata formats for additional tags
-        print("🔍 Available metadata formats: \(asset.availableMetadataFormats)")
+        logger.debug("🔍 Available metadata formats: \(asset.availableMetadataFormats)")
         for format in asset.availableMetadataFormats {
             let metadata = asset.metadata(forFormat: format)
-            print("📋 Format: \(format.rawValue) - \(metadata.count) items")
+            logger.debug("📋 Format: \(format.rawValue) - \(metadata.count) items")
 
             for item in metadata {
                 // Try common keys first
@@ -174,20 +175,20 @@ class FileImportService: FileImportServiceProtocol {
                     // Debug: log all identifiers to see what's available
                     if trackNumber == nil || discNumber == nil {
                         let valueDesc = item.stringValue ?? item.numberValue?.description ?? (item.dataValue != nil ? "<binary \(item.dataValue!.count) bytes>" : "nil")
-                        print("   🏷️ Identifier: \(identifier) - Value: \(valueDesc)")
+                        logger.debug("   🏷️ Identifier: \(identifier) - Value: \(valueDesc)")
                     }
 
                     // Track number - check for trkn (iTunes/ALAC), trackNumber, TRCK (ID3)
                     if trackNumber == nil && (identifier.contains("trkn") || identifier.contains("trackNumber") || identifier.contains("TRCK")) {
                         if let value = item.numberValue {
                             trackNumber = value.intValue
-                            print("🔢 Found track number (number): \(trackNumber!)")
+                            logger.debug("🔢 Found track number (number): \(trackNumber!)")
                         } else if let stringValue = item.stringValue {
                             // Handle formats like "3" or "3/12"
                             let components = stringValue.components(separatedBy: "/")
                             if let value = Int(components[0]) {
                                 trackNumber = value
-                                print("🔢 Found track number (string): \(trackNumber!)")
+                                logger.debug("🔢 Found track number (string): \(trackNumber!)")
                             }
                         } else if let data = item.dataValue {
                             // ALAC/iTunes stores track numbers as binary data
@@ -197,7 +198,7 @@ class FileImportService: FileImportServiceProtocol {
                                 let trackNum = Int(bytes[2]) * 256 + Int(bytes[3])
                                 if trackNum > 0 {
                                     trackNumber = trackNum
-                                    print("🔢 Found track number (binary format): \(trackNumber!) from \(data.count) bytes")
+                                    logger.debug("🔢 Found track number (binary format): \(trackNumber!) from \(data.count) bytes")
                                 }
                             } else if data.count >= 2 {
                                 // Sometimes it's just 2 bytes
@@ -205,7 +206,7 @@ class FileImportService: FileImportServiceProtocol {
                                 let trackNum = Int(bytes[0]) * 256 + Int(bytes[1])
                                 if trackNum > 0 {
                                     trackNumber = trackNum
-                                    print("🔢 Found track number (binary short format): \(trackNumber!) from \(data.count) bytes")
+                                    logger.debug("🔢 Found track number (binary short format): \(trackNumber!) from \(data.count) bytes")
                                 }
                             }
                         }
@@ -215,12 +216,12 @@ class FileImportService: FileImportServiceProtocol {
                     if discNumber == nil && (identifier.contains("disk") || identifier.contains("discNumber") || identifier.contains("TPOS") || identifier.contains("partOfASet")) {
                         if let value = item.numberValue {
                             discNumber = value.intValue
-                            print("💿 Found disc number (number): \(discNumber!)")
+                            logger.debug("💿 Found disc number (number): \(discNumber!)")
                         } else if let stringValue = item.stringValue {
                             let components = stringValue.components(separatedBy: "/")
                             if let value = Int(components[0]) {
                                 discNumber = value
-                                print("💿 Found disc number (string): \(discNumber!)")
+                                logger.debug("💿 Found disc number (string): \(discNumber!)")
                             }
                         } else if let data = item.dataValue {
                             // Same binary format as track number
@@ -229,7 +230,7 @@ class FileImportService: FileImportServiceProtocol {
                                 let discNum = Int(bytes[2]) * 256 + Int(bytes[3])
                                 if discNum > 0 {
                                     discNumber = discNum
-                                    print("💿 Found disc number (binary): \(discNumber!)")
+                                    logger.debug("💿 Found disc number (binary): \(discNumber!)")
                                 }
                             }
                         }
@@ -240,7 +241,7 @@ class FileImportService: FileImportServiceProtocol {
                         if let stringValue = item.stringValue, stringValue.count >= 4 {
                             if let value = Int(stringValue.prefix(4)) {
                                 year = value
-                                print("📅 Found year: \(year!)")
+                                logger.debug("📅 Found year: \(year!)")
                             }
                         }
                     }
@@ -249,7 +250,7 @@ class FileImportService: FileImportServiceProtocol {
                     if albumArtist == nil && (identifier.contains("albumArtist") || identifier.contains("TPE2")) {
                         albumArtist = item.stringValue
                         if albumArtist != nil {
-                            print("👤 Found album artist: \(albumArtist!)")
+                            logger.debug("👤 Found album artist: \(albumArtist!)")
                         }
                     }
 
@@ -257,7 +258,7 @@ class FileImportService: FileImportServiceProtocol {
                     if genre == nil && (identifier.contains("genre") || identifier.contains("TCON")) {
                         genre = item.stringValue
                         if genre != nil {
-                            print("🎸 Found genre: \(genre!)")
+                            logger.debug("🎸 Found genre: \(genre!)")
                         }
                     }
                 }
@@ -322,7 +323,7 @@ class FileImportService: FileImportServiceProtocol {
     }
 
     func scanDirectory(_ directoryURL: URL) -> [URL] {
-        print("📂 Scanning directory: \(directoryURL.path)")
+        logger.debug("📂 Scanning directory: \(directoryURL.path)")
         var audioFiles: [URL] = []
 
         let fileManager = FileManager.default
@@ -331,7 +332,7 @@ class FileImportService: FileImportServiceProtocol {
             includingPropertiesForKeys: [.isRegularFileKey],
             options: [.skipsHiddenFiles, .skipsPackageDescendants]
         ) else {
-            print("❌ Failed to create directory enumerator")
+            logger.error("❌ Failed to create directory enumerator")
             return []
         }
 
@@ -346,11 +347,11 @@ class FileImportService: FileImportServiceProtocol {
             // Check if it's an audio file
             if isValidAudioFile(fileURL) {
                 audioFiles.append(fileURL)
-                print("  ✅ Found audio file: \(fileURL.lastPathComponent)")
+                logger.info("  ✅ Found audio file: \(fileURL.lastPathComponent)")
             }
         }
 
-        print("📊 Scan complete: found \(audioFiles.count) audio files")
+        logger.info("📊 Scan complete: found \(audioFiles.count) audio files")
         return audioFiles
     }
 
@@ -359,14 +360,14 @@ class FileImportService: FileImportServiceProtocol {
         library: Library,
         in context: NSManagedObjectContext
     ) -> AnyPublisher<ImportProgress, Error> {
-        print("📍 Pointing library at directory: \(directoryURL.path)")
+        logger.debug("📍 Pointing library at directory: \(directoryURL.path)")
 
         // Update library path to point at this directory
         library.path = directoryURL.path
 
         // Scan directory for audio files
         let audioFiles = scanDirectory(directoryURL)
-        print("🎵 Found \(audioFiles.count) audio files to import")
+        logger.debug("🎵 Found \(audioFiles.count) audio files to import")
 
         // Import all files using "leave in place" mode
         return importFiles(audioFiles, into: library, in: context, mode: .pointAtDirectory)
@@ -380,12 +381,12 @@ class FileImportService: FileImportServiceProtocol {
         mode: ImportMode,
         progress: PassthroughSubject<ImportProgress, Error>
     ) async throws {
-        print("🔄 performImport started with \(urls.count) files")
+        logger.debug("🔄 performImport started with \(urls.count) files")
         let totalFiles = urls.count
         var processedFiles = 0
 
         // Send preparing status
-        print("📤 Sending preparing status")
+        logger.debug("📤 Sending preparing status")
         progress.send(ImportProgress(
             filesProcessed: 0,
             totalFiles: totalFiles,
@@ -395,20 +396,20 @@ class FileImportService: FileImportServiceProtocol {
         ))
 
         // Use background context
-        print("🗄️ Starting background task")
+        logger.debug("🗄️ Starting background task")
         await persistence.performBackgroundTask { context in
-            print("📝 Inside background context")
+            logger.debug("📝 Inside background context")
             do {
             // Get library in background context
             guard let backgroundLibrary = try? context.existingObject(with: library.objectID) as? Library else {
-                print("❌ Library not found in background context")
+                logger.error("❌ Library not found in background context")
                 throw ImportError.databaseError("Library not found")
             }
-            print("✅ Got library in background context: \(backgroundLibrary.name ?? "unknown")")
+            logger.info("✅ Got library in background context: \(backgroundLibrary.name ?? "unknown")")
 
             for url in urls {
                 let fileName = url.lastPathComponent
-                print("📂 Processing file: \(fileName)")
+                logger.debug("📂 Processing file: \(fileName)")
 
                 // Send progress
                 progress.send(ImportProgress(
@@ -421,24 +422,24 @@ class FileImportService: FileImportServiceProtocol {
 
                 do {
                     // Validate file
-                    print("🔍 Validating file: \(fileName)")
+                    logger.debug("🔍 Validating file: \(fileName)")
                     guard self.isValidAudioFile(url) else {
-                        print("❌ Invalid audio file: \(fileName)")
+                        logger.error("❌ Invalid audio file: \(fileName)")
                         throw ImportError.unsupportedFormat(url.pathExtension)
                     }
-                    print("✅ File is valid")
+                    logger.info("✅ File is valid")
 
                     // Check for duplicates
-                    print("🔎 Checking for duplicates")
+                    logger.debug("🔎 Checking for duplicates")
                     if let _ = try self.findDuplicate(for: url, in: backgroundLibrary, context: context) {
-                        print("⏭️ Skipping duplicate: \(fileName)")
+                        logger.debug("⏭️ Skipping duplicate: \(fileName)")
                         // Skip duplicate
                         processedFiles += 1
                         continue
                     }
 
                     // Extract metadata
-                    print("🎵 Extracting metadata from \(fileName)")
+                    logger.debug("🎵 Extracting metadata from \(fileName)")
                     progress.send(ImportProgress(
                         filesProcessed: processedFiles,
                         totalFiles: totalFiles,
@@ -448,12 +449,12 @@ class FileImportService: FileImportServiceProtocol {
                     ))
 
                     let metadata = try self.extractMetadata(from: url)
-                    print("✅ Metadata extracted: \(metadata.title ?? "Unknown")")
+                    logger.info("✅ Metadata extracted: \(metadata.title ?? "Unknown")")
 
                     // Handle file based on import mode
                     let filePath: String
                     if mode == .addToKanora {
-                        print("📁 Adding file to Kanora (copy and organize)")
+                        logger.debug("📁 Adding file to Kanora (copy and organize)")
                         progress.send(ImportProgress(
                             filesProcessed: processedFiles,
                             totalFiles: totalFiles,
@@ -464,10 +465,10 @@ class FileImportService: FileImportServiceProtocol {
 
                         let destinationURL = try self.copyFileToKanora(url, metadata: metadata, library: backgroundLibrary)
                         filePath = destinationURL.path
-                        print("✅ File copied and organized: \(filePath)")
+                        logger.info("✅ File copied and organized: \(filePath)")
                     } else {
                         // Point at directory - use original path
-                        print("📍 Keeping file in place: \(url.path)")
+                        logger.debug("📍 Keeping file in place: \(url.path)")
                         filePath = url.path
                     }
 
@@ -482,7 +483,7 @@ class FileImportService: FileImportServiceProtocol {
                     }
                 } catch {
                     // Log error but continue with other files
-                    print("Error importing \(fileName): \(error.localizedDescription)")
+                    logger.error("Error importing \(fileName): \(error.localizedDescription)")
                 }
             }
 
@@ -529,21 +530,21 @@ class FileImportService: FileImportServiceProtocol {
         let fileName = sourceURL.lastPathComponent
         let destinationURL = albumURL.appendingPathComponent(fileName)
 
-        print("📂 Organizing to: \(artistName)/\(albumName)/\(fileName)")
-        print("📥 Full destination: \(destinationURL.path)")
+        logger.debug("📂 Organizing to: \(artistName)/\(albumName)/\(fileName)")
+        logger.debug("📥 Full destination: \(destinationURL.path)")
 
         // Ensure album directory exists
         try FileManager.default.createDirectory(at: albumURL, withIntermediateDirectories: true)
 
         // Copy file
         if FileManager.default.fileExists(atPath: destinationURL.path) {
-            print("⚠️ File already exists, removing: \(destinationURL.lastPathComponent)")
+            logger.warning("⚠️ File already exists, removing: \(destinationURL.lastPathComponent)")
             try FileManager.default.removeItem(at: destinationURL)
         }
 
-        print("📋 Copying from: \(sourceURL.path)")
+        logger.debug("📋 Copying from: \(sourceURL.path)")
         try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
-        print("✅ Copy successful")
+        logger.info("✅ Copy successful")
 
         return destinationURL
     }
@@ -567,9 +568,9 @@ class FileImportService: FileImportServiceProtocol {
             do {
                 let artworkPath = try saveArtwork(artworkData, for: album, library: library)
                 album.artworkPath = artworkPath
-                print("🎨 Saved artwork to: \(artworkPath)")
+                logger.debug("🎨 Saved artwork to: \(artworkPath)")
             } catch {
-                print("⚠️ Failed to save artwork: \(error.localizedDescription)")
+                logger.error("⚠️ Failed to save artwork: \(error.localizedDescription)")
             }
         }
 

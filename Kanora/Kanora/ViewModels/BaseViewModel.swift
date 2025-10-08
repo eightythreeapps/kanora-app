@@ -32,6 +32,8 @@ class BaseViewModel: ObservableObject {
     /// Services container for dependency injection
     let services: ServiceContainer
 
+    private let logger = AppLogger.baseViewModel
+
     // MARK: - Initialization
 
     init(context: NSManagedObjectContext, services: ServiceContainer) {
@@ -55,7 +57,7 @@ class BaseViewModel: ObservableObject {
 
     /// Handles errors with logging and user notification
     func handleError(_ error: Error, context: String) {
-        print("❌ Error in \(context): \(error.localizedDescription)")
+        logger.error("❌ Error in \(context): \(error.localizedDescription)")
         // Can be extended to show user-facing error messages
     }
 
@@ -67,7 +69,7 @@ class BaseViewModel: ObservableObject {
 
         do {
             try context.save()
-            print("✅ Context saved from \(String(describing: type(of: self)))")
+            logger.info("✅ Context saved from \(String(describing: type(of: self)))")
         } catch {
             handleError(error, context: "Saving context")
         }

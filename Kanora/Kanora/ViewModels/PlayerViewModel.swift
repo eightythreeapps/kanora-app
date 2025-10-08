@@ -34,6 +34,8 @@ class PlayerViewModel: BaseViewModel {
     @Published var isMuted: Bool = false
     @Published var isPlaying: Bool = false
 
+    private let logger = AppLogger.playerViewModel
+
     // MARK: - Computed Properties
 
     var currentTimeFormatted: String {
@@ -108,18 +110,18 @@ class PlayerViewModel: BaseViewModel {
     // MARK: - Private Methods
 
     private func subscribeToPlayerState() {
-        print("🔗 PlayerViewModel subscribing to player state")
+        logger.debug("🔗 PlayerViewModel subscribing to player state")
 
         // Subscribe to playback state changes
         services.audioPlayerService.statePublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
-                print("🎵 Playback state changed: \(state)")
+                logger.info("🎵 Playback state changed: \(state)")
                 self?.isPlaying = state.isPlaying
 
                 // Update current track from service
                 if let currentTrack = self?.services.audioPlayerService.currentTrack {
-                    print("📀 Current track: \(currentTrack.title ?? "Unknown")")
+                    logger.debug("📀 Current track: \(currentTrack.title ?? "Unknown")")
                     self?.currentTrack = currentTrack
                     self?.duration = currentTrack.duration
                 } else if state == .idle || state == .stopped {
@@ -141,7 +143,7 @@ class PlayerViewModel: BaseViewModel {
         $currentTrack
             .compactMap { $0 }
             .sink { [weak self] track in
-                print("📊 Track changed in ViewModel: \(track.title ?? "Unknown")")
+                logger.info("📊 Track changed in ViewModel: \(track.title ?? "Unknown")")
                 self?.duration = track.duration
             }
             .store(in: &cancellables)

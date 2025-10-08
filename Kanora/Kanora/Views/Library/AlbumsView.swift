@@ -171,6 +171,7 @@ struct AlbumGridItem: View {
 struct AlbumDetailView: View {
     let album: Album
     private let services = ServiceContainer.shared
+    private let logger = AppLogger.libraryView
 
     private var tracks: [Track] {
         guard let tracksSet = album.tracks as? Set<Track> else { return [] }
@@ -250,7 +251,7 @@ struct AlbumDetailView: View {
                     // Play All button
                     if !tracks.isEmpty {
                         Button(action: {
-                            print("▶️ Play All button pressed for album: \(album.title ?? "Unknown")")
+                            logger.debug("▶️ Play All button pressed for album: \(album.title ?? "Unknown")")
                             playAlbum()
                         }) {
                             Label(L10n.Actions.play, systemImage: "play.fill")
@@ -290,11 +291,11 @@ struct AlbumDetailView: View {
                         TrackRowView(track: track)
                             .contentShape(Rectangle())
                             .onTapGesture(count: 2) {
-                                print("🖱️ Double-click on track: \(track.title ?? "Unknown")")
+                                logger.debug("🖱️ Double-click on track: \(track.title ?? "Unknown")")
                                 playTrack(track)
                             }
                             .onTapGesture(count: 1) {
-                                print("👆 Single-click on track: \(track.title ?? "Unknown")")
+                                logger.debug("👆 Single-click on track: \(track.title ?? "Unknown")")
                             }
                     }
                 }
@@ -308,20 +309,20 @@ struct AlbumDetailView: View {
 
     private func playAlbum() {
         guard !tracks.isEmpty else {
-            print("❌ No tracks to play")
+            logger.error("❌ No tracks to play")
             return
         }
-        print("🎵 Playing album with \(tracks.count) tracks")
+        logger.info("🎵 Playing album with \(tracks.count) tracks")
         services.audioPlayerService.setQueue(tracks: tracks, startIndex: 0)
         try? services.audioPlayerService.play(track: tracks[0])
     }
 
     private func playTrack(_ track: Track) {
         guard let index = tracks.firstIndex(of: track) else {
-            print("❌ Track not found in album")
+            logger.error("❌ Track not found in album")
             return
         }
-        print("🎵 Playing track at index \(index): \(track.title ?? "Unknown")")
+        logger.info("🎵 Playing track at index \(index): \(track.title ?? "Unknown")")
         services.audioPlayerService.setQueue(tracks: tracks, startIndex: index)
         try? services.audioPlayerService.play(track: track)
     }

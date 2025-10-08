@@ -10,6 +10,7 @@ import UniformTypeIdentifiers
 
 struct ImportFilesView: View {
     @StateObject private var viewModel: ImportViewModel
+    private let logger = AppLogger.importView
 
     init(services: ServiceContainer) {
         _viewModel = StateObject(wrappedValue: ImportViewModel(
@@ -109,17 +110,17 @@ struct ImportFilesView: View {
         ) { result in
             switch result {
             case .success(let urls):
-                print("🔍 File picker returned \(urls.count) files")
+                logger.debug("🔍 File picker returned \(urls.count) files")
                 // Start accessing security-scoped resources
                 let accessibleURLs = urls.compactMap { url -> URL? in
                     let didStartAccessing = url.startAccessingSecurityScopedResource()
-                    print("🔐 Security access for \(url.lastPathComponent): \(didStartAccessing)")
+                    logger.debug("🔐 Security access for \(url.lastPathComponent): \(didStartAccessing)")
                     return didStartAccessing ? url : nil
                 }
-                print("✅ Accessible files: \(accessibleURLs.count)")
+                logger.info("✅ Accessible files: \(accessibleURLs.count)")
                 viewModel.selectFiles(accessibleURLs)
             case .failure(let error):
-                print("❌ File picker error: \(error.localizedDescription)")
+                logger.error("❌ File picker error: \(error.localizedDescription)")
             }
         }
         .fileImporter(
@@ -130,12 +131,12 @@ struct ImportFilesView: View {
             switch result {
             case .success(let urls):
                 if let directoryURL = urls.first {
-                    print("📂 Directory selected: \(directoryURL.path)")
+                    logger.debug("📂 Directory selected: \(directoryURL.path)")
                     _ = directoryURL.startAccessingSecurityScopedResource()
                     viewModel.selectDirectory(directoryURL)
                 }
             case .failure(let error):
-                print("❌ Directory picker error: \(error.localizedDescription)")
+                logger.error("❌ Directory picker error: \(error.localizedDescription)")
             }
         }
     }
