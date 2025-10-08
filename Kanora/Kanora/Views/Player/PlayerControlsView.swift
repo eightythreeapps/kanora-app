@@ -26,22 +26,36 @@ struct PlayerControlsView: View {
             // Now playing info
             HStack(spacing: 12) {
                 // Album art placeholder
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.secondary.opacity(0.2))
-                    .frame(width: 50, height: 50)
-                    .overlay {
-                        if viewModel.currentTrack != nil {
-                            Image(systemName: "music.note")
-                                .foregroundColor(.secondary)
-                        }
+                Group {
+                    if let track = viewModel.currentTrack,
+                       let artworkImage = track.artworkImage {
+                        #if os(macOS)
+                        Image(nsImage: artworkImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                        #else
+                        Image(uiImage: artworkImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                        #endif
+                    } else {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.secondary.opacity(0.2))
+                            .overlay {
+                                Image(systemName: "music.note")
+                                    .foregroundColor(.secondary)
+                            }
                     }
+                }
+                .frame(width: 50, height: 50)
+                .cornerRadius(4)
 
                 if let track = viewModel.currentTrack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(track.title ?? String(localized: "library.unknown_track"))
+                        Text(track.title)
                             .font(.headline)
                             .lineLimit(1)
-                        Text(track.album?.artist?.name ?? String(localized: "library.unknown_artist"))
+                        Text(track.artistName)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .lineLimit(1)
