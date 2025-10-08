@@ -10,6 +10,7 @@ import UniformTypeIdentifiers
 
 struct ImportFilesView: View {
     @StateObject private var viewModel: ImportViewModel
+    @ThemeAccess private var theme
 
     init(services: ServiceContainer) {
         _viewModel = StateObject(wrappedValue: ImportViewModel(
@@ -19,28 +20,29 @@ struct ImportFilesView: View {
     }
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: theme.spacing.xl) {
             // Header
-            VStack(spacing: 8) {
+            VStack(spacing: theme.spacing.sm) {
                 Image(systemName: "square.and.arrow.down")
-                    .font(.system(size: 60))
-                    .foregroundColor(.accentColor)
+                    .font(theme.typography.displaySmall)
+                    .foregroundStyle(theme.colors.accent)
 
                 Text(L10n.Navigation.importFiles)
-                    .font(.title.bold())
+                    .font(theme.typography.titleLarge)
+                    .fontWeight(.bold)
 
                 Text(viewModel.statusMessage)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .font(theme.typography.bodySmall)
+                    .foregroundStyle(theme.colors.textSecondary)
                     .multilineTextAlignment(.center)
             }
-            .padding(.top, 40)
+            .padding(.top, theme.spacing.xxxxl)
 
             // Library Selector
             if !viewModel.availableLibraries.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: theme.spacing.sm) {
                     Text(L10n.Import.selectLibrary)
-                        .font(.headline)
+                        .font(theme.typography.titleSmall)
 
                     Picker("", selection: $viewModel.selectedLibraryID) {
                         ForEach(viewModel.availableLibraries) { library in
@@ -50,16 +52,16 @@ struct ImportFilesView: View {
                     }
                     .pickerStyle(.menu)
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, theme.spacing.md)
             }
 
             // Import Mode Selector - Card-based
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: theme.spacing.sm) {
                 Text("Choose Import Method")
-                    .font(.headline)
-                    .padding(.horizontal)
+                    .font(theme.typography.titleSmall)
+                    .padding(.horizontal, theme.spacing.md)
 
-                HStack(spacing: 16) {
+                HStack(spacing: theme.spacing.md) {
                     ForEach(ImportMode.allCases, id: \.self) { mode in
                         ImportModeCard(
                             mode: mode,
@@ -73,7 +75,7 @@ struct ImportFilesView: View {
                         )
                     }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, theme.spacing.md)
             }
 
             // Drop Zone or File List
@@ -93,7 +95,7 @@ struct ImportFilesView: View {
             // Actions
             actionButtons
         }
-        .padding(.bottom, 100) // Space for floating player
+        .padding(.bottom, theme.spacing.xxxxl * 2) // Space for floating player
         .onAppear { viewModel.onAppear() }
         .onDisappear { viewModel.onDisappear() }
         .fileImporter(
@@ -146,43 +148,51 @@ struct ImportFilesView: View {
         let mode: ImportMode
         let isSelected: Bool
         let action: () -> Void
+        @ThemeAccess private var theme
 
         var body: some View {
             Button(action: action) {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: theme.spacing.sm) {
                     HStack {
                         Image(systemName: mode.icon)
-                            .font(.title)
-                            .foregroundColor(isSelected ? .accentColor : .secondary)
+                            .font(theme.typography.titleMedium)
+                            .foregroundStyle(isSelected ? theme.colors.accent : theme.colors.textSecondary)
 
                         Spacer()
 
                         if isSelected {
                             Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(.accentColor)
+                                .foregroundStyle(theme.colors.accent)
                         }
                     }
 
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: theme.spacing.xxxs) {
                         Text(mode.displayName)
-                            .font(.headline)
-                            .foregroundColor(.primary)
+                            .font(theme.typography.titleSmall)
+                            .foregroundStyle(theme.colors.textPrimary)
 
                         Text(mode.description)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(theme.typography.caption)
+                            .foregroundStyle(theme.colors.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
-                .padding()
+                .padding(theme.spacing.md)
                 .frame(maxWidth: .infinity)
                 .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(isSelected ? Color.accentColor.opacity(0.1) : Color.secondary.opacity(0.1))
+                    RoundedRectangle(cornerRadius: theme.effects.radiusLG)
+                        .fill(
+                            isSelected
+                                ? theme.colors.accent.opacity(0.1)
+                                : theme.colors.surfaceSecondary
+                        )
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
+                    RoundedRectangle(cornerRadius: theme.effects.radiusLG)
+                        .stroke(
+                            isSelected ? theme.colors.accent : Color.clear,
+                            lineWidth: 2
+                        )
                 )
             }
             .buttonStyle(.plain)
@@ -192,40 +202,34 @@ struct ImportFilesView: View {
     // MARK: - Drop Zone
 
     private var dropZone: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: theme.spacing.md) {
             Image(systemName: "arrow.down.doc")
-                .font(.system(size: 48))
-                .foregroundColor(.secondary)
+                .font(theme.typography.headlineMedium)
+                .foregroundStyle(theme.colors.textSecondary)
 
             Text(L10n.Import.dropFilesHere)
-                .font(.headline)
-                .foregroundColor(.secondary)
+                .font(theme.typography.titleSmall)
+                .foregroundStyle(theme.colors.textSecondary)
 
             Text("Supported formats: MP3, FLAC, M4A, WAV, AAC")
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .themedSecondaryLabel()
 
             Button(action: {
                 viewModel.showFilePicker = true
             }) {
                 Label(L10n.Import.selectFiles, systemImage: "folder")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 12)
-                    .background(Color.accentColor)
-                    .cornerRadius(8)
+                    .themedPrimaryButton()
             }
             .buttonStyle(.plain)
         }
         .frame(maxWidth: .infinity)
         .frame(height: 300)
         .background(
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: theme.effects.radiusLG)
                 .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [10]))
-                .foregroundColor(.secondary.opacity(0.5))
+                .foregroundStyle(theme.colors.borderSecondary)
         )
-        .padding(.horizontal)
+        .padding(.horizontal, theme.spacing.md)
         .onDrop(of: [.fileURL], isTargeted: nil) { providers in
             viewModel.handleDrop(providers: providers)
         }
@@ -234,22 +238,23 @@ struct ImportFilesView: View {
     // MARK: - File List
 
     private var fileList: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: theme.spacing.sm) {
             HStack {
                 Text("\(viewModel.selectedFiles.count) files selected")
-                    .font(.headline)
+                    .font(theme.typography.titleSmall)
                 Spacer()
                 Button(action: viewModel.clearFiles) {
                     Text(L10n.Import.clearSelection)
-                        .font(.subheadline)
+                        .font(theme.typography.bodySmall)
+                        .foregroundStyle(theme.colors.accent)
                 }
                 .buttonStyle(.plain)
                 .disabled(viewModel.viewState.isLoading)
             }
-            .padding(.horizontal)
+            .padding(.horizontal, theme.spacing.md)
 
             ScrollView {
-                LazyVStack(spacing: 4) {
+                LazyVStack(spacing: theme.spacing.xxxs) {
                     ForEach(Array(viewModel.selectedFiles.enumerated()), id: \.element) { index, url in
                         FileRow(
                             url: url,
@@ -260,7 +265,7 @@ struct ImportFilesView: View {
                         )
                     }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, theme.spacing.md)
             }
             .frame(maxHeight: 400)
         }
@@ -275,33 +280,26 @@ struct ImportFilesView: View {
 
             if let currentFile = viewModel.currentFile {
                 Text(currentFile)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .themedSecondaryLabel()
                     .lineLimit(1)
             }
 
             Text("\(viewModel.filesProcessed) / \(viewModel.totalFiles)")
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .themedSecondaryLabel()
         }
-        .padding()
+        .padding(theme.spacing.md)
     }
 
     // MARK: - Action Buttons
 
     private var actionButtons: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: theme.spacing.md) {
             if !viewModel.selectedFiles.isEmpty && !viewModel.viewState.isLoading {
                 Button(action: {
                     viewModel.showFilePicker = true
                 }) {
                     Label(L10n.Actions.add, systemImage: "plus")
-                        .font(.headline)
-                        .foregroundColor(.accentColor)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 12)
-                        .background(Color.accentColor.opacity(0.1))
-                        .cornerRadius(8)
+                        .themedTintedButton()
                 }
                 .buttonStyle(.plain)
             }
@@ -309,19 +307,14 @@ struct ImportFilesView: View {
             if viewModel.canImport {
                 Button(action: viewModel.startImport) {
                     Label(L10n.Import.startImport, systemImage: "square.and.arrow.down")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 32)
-                        .padding(.vertical, 12)
-                        .background(Color.accentColor)
-                        .cornerRadius(8)
+                        .themedPrimaryButton()
                 }
                 .buttonStyle(.plain)
                 .disabled(viewModel.viewState.isLoading)
             }
         }
-        .padding(.horizontal)
-        .padding(.bottom, 24)
+        .padding(.horizontal, theme.spacing.md)
+        .padding(.bottom, theme.spacing.xl)
     }
 }
 
@@ -331,35 +324,37 @@ struct FileRow: View {
     let url: URL
     let onRemove: () -> Void
     let isEnabled: Bool
+    @ThemeAccess private var theme
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: theme.spacing.sm) {
             Image(systemName: "music.note")
-                .foregroundColor(.secondary)
+                .foregroundStyle(theme.colors.textSecondary)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: theme.spacing.xxxs) {
                 Text(url.lastPathComponent)
-                    .font(.body)
+                    .font(theme.typography.bodyMedium)
                     .lineLimit(1)
 
                 Text(url.pathExtension.uppercased())
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .themedSecondaryLabel()
             }
 
             Spacer()
 
             Button(action: onRemove) {
                 Image(systemName: "xmark.circle.fill")
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(theme.colors.textSecondary)
             }
             .buttonStyle(.plain)
             .disabled(!isEnabled)
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 12)
-        .background(Color.secondary.opacity(0.1))
-        .cornerRadius(8)
+        .padding(.vertical, theme.spacing.xs)
+        .padding(.horizontal, theme.spacing.md)
+        .background(
+            RoundedRectangle(cornerRadius: theme.effects.radiusMD)
+                .fill(theme.colors.surfaceSecondary)
+        )
     }
 }
 
@@ -367,8 +362,10 @@ struct FileRow: View {
 
 #Preview("Empty") {
     ImportFilesView(services: ServiceContainer.preview)
+        .designSystem()
 }
 
 #Preview("With Files") {
     ImportFilesView(services: ServiceContainer.preview)
+        .designSystem()
 }

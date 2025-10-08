@@ -11,50 +11,49 @@ import AppKit
 #endif
 
 struct PlayerControlsView: View {
-    @EnvironmentObject private var viewModel: PlayerViewModel
+    @StateObject private var viewModel: PlayerViewModel
+    @ThemeAccess private var theme
+
+    init(services: ServiceContainer) {
+        // Use shared PlayerViewModel instance
+        _viewModel = StateObject(wrappedValue: PlayerViewModel.shared(
+            context: services.persistence.viewContext,
+            services: services
+        ))
+    }
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: theme.spacing.sm) {
             // Now playing info
-            HStack(spacing: 12) {
+            HStack(spacing: theme.spacing.sm) {
                 // Album art placeholder
-                Group {
-                    if let track = viewModel.currentTrack,
-                       let artworkImage = track.artworkImage {
-                        #if os(macOS)
-                        Image(nsImage: artworkImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                        #else
-                        Image(uiImage: artworkImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                        #endif
-                    } else {
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color.secondary.opacity(0.2))
-                            .overlay {
-                                Image(systemName: "music.note")
-                                    .foregroundColor(.secondary)
-                            }
+                RoundedRectangle(cornerRadius: theme.effects.radiusXS)
+                    .fill(theme.colors.surfaceSecondary)
+                    .frame(width: 50, height: 50)
+                    .overlay {
+                        if viewModel.currentTrack != nil {
+                            Image(systemName: "music.note")
+                                .foregroundStyle(theme.colors.textSecondary)
+                        }
                     }
                 }
                 .frame(width: 50, height: 50)
                 .cornerRadius(4)
 
                 if let track = viewModel.currentTrack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(track.title)
-                            .font(.headline)
+                    VStack(alignment: .leading, spacing: theme.spacing.xxxs) {
+                        Text(track.title ?? String(localized: "library.unknown_track"))
+                            .font(theme.typography.titleSmall)
                             .lineLimit(1)
-                        Text(track.artistName)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                        Text(track.album?.artist?.name ?? String(localized: "library.unknown_artist"))
+                            .font(theme.typography.bodySmall)
+                            .foregroundStyle(theme.colors.textSecondary)
                             .lineLimit(1)
                     }
                 } else {
                     Text(L10n.Player.noTrackPlaying)
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.bodySmall)
+                        .foregroundStyle(theme.colors.textSecondary)
                 }
             }
             .frame(minWidth: 150, idealWidth: 250, maxWidth: 300)
@@ -62,35 +61,34 @@ struct PlayerControlsView: View {
             Spacer()
 
             // Playback controls
-            VStack(spacing: 8) {
-                HStack(spacing: 16) {
+            VStack(spacing: theme.spacing.xs) {
+                HStack(spacing: theme.spacing.md) {
                     Button(action: viewModel.skipToPrevious) {
                         Image(systemName: "backward.fill")
-                            .font(.title3)
+                            .font(theme.typography.titleSmall)
                     }
                     .buttonStyle(.plain)
                     .disabled(viewModel.currentTrack == nil)
 
                     Button(action: viewModel.togglePlayPause) {
                         Image(systemName: viewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                            .font(.system(size: 36))
+                            .font(theme.typography.displaySmall)
                     }
                     .buttonStyle(.plain)
                     .disabled(viewModel.currentTrack == nil)
 
                     Button(action: viewModel.skipToNext) {
                         Image(systemName: "forward.fill")
-                            .font(.title3)
+                            .font(theme.typography.titleSmall)
                     }
                     .buttonStyle(.plain)
                     .disabled(viewModel.currentTrack == nil)
                 }
 
                 // Progress bar
-                HStack(spacing: 8) {
+                HStack(spacing: theme.spacing.xs) {
                     Text(viewModel.currentTimeFormatted)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .themedSecondaryLabel()
                         .monospacedDigit()
 
                     Slider(value: $viewModel.currentTime, in: 0...viewModel.duration) { editing in
@@ -102,8 +100,7 @@ struct PlayerControlsView: View {
                     .disabled(viewModel.currentTrack == nil)
 
                     Text(viewModel.durationFormatted)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .themedSecondaryLabel()
                         .monospacedDigit()
                 }
             }
@@ -111,7 +108,7 @@ struct PlayerControlsView: View {
             Spacer()
 
             // Volume control
-            HStack(spacing: 12) {
+            HStack(spacing: theme.spacing.sm) {
                 Button(action: viewModel.toggleMute) {
                     Image(systemName: viewModel.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
                 }
@@ -122,12 +119,8 @@ struct PlayerControlsView: View {
             }
             .frame(minWidth: 100, idealWidth: 150, maxWidth: 200)
         }
-        .padding()
-#if os(macOS)
-        .background(Color(nsColor: .windowBackgroundColor))
-#else
-        .background(Color(.systemBackground))
-#endif
+        .padding(theme.spacing.md)
+        .background(theme.colors.surface)
         .frame(minHeight: 80, idealHeight: 80, maxHeight: 100)
     }
 }
