@@ -253,6 +253,31 @@ struct FloatingMiniPlayer: View {
 }
 
 #Preview("Populated - Compact") {
+    let services = ServiceContainer.preview
+    let playerViewModel = PlayerViewModel(
+        context: services.persistence.viewContext,
+        services: services
+    )
+
+    return FloatingMiniPlayer()
+        .environment(\.horizontalSizeClass, .compact)
+        .environment(\.managedObjectContext, services.persistence.viewContext)
+        .environment(\.serviceContainer, services)
+        .environmentObject(playerViewModel)
+}
+
+#Preview("Populated - Regular") {
+    let services = ServiceContainer.preview
+    let playerViewModel = PlayerViewModel(
+        context: services.persistence.viewContext,
+        services: services
+    )
+
+    return FloatingMiniPlayer()
+        .environment(\.horizontalSizeClass, .regular)
+        .environment(\.managedObjectContext, services.persistence.viewContext)
+        .environment(\.serviceContainer, services)
+        .environmentObject(playerViewModel)
     let dependencies = PreviewFactory.makePreviewDependencies()
     return FloatingMiniPlayer()
         .environment(\.managedObjectContext, dependencies.services.persistence.viewContext)

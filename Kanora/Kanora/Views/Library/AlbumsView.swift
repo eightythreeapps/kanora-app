@@ -155,6 +155,7 @@ struct AlbumGridItem: View {
 
 struct AlbumDetailView: View {
     let album: Album
+    @Environment(\.serviceContainer) private var services
     private let services = ServiceContainer.shared
     private let logger = AppLogger.libraryView
 

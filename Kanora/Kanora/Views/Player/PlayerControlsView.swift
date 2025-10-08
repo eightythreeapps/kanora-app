@@ -11,16 +11,7 @@ import AppKit
 #endif
 
 struct PlayerControlsView: View {
-    @StateObject private var viewModel: PlayerViewModel
-    @ThemeAccess private var theme
-
-    init(services: ServiceContainer) {
-        // Use shared PlayerViewModel instance
-        _viewModel = StateObject(wrappedValue: PlayerViewModel.shared(
-            context: services.persistence.viewContext,
-            services: services
-        ))
-    }
+    @EnvironmentObject private var viewModel: PlayerViewModel
 
     var body: some View {
         HStack(spacing: theme.spacing.sm) {

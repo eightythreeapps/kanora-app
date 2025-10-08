@@ -10,9 +10,19 @@ import CoreData
 
 @main
 struct KanoraApp: App {
-    let persistenceController = PersistenceController.shared
+    let persistenceController: PersistenceController
+    let services: ServiceContainer
+    @StateObject private var playerViewModel: PlayerViewModel
 
     init() {
+        let persistenceController = PersistenceController.shared
+        let services = ServiceContainer(persistence: persistenceController)
+        self.persistenceController = persistenceController
+        self.services = services
+        _playerViewModel = StateObject(wrappedValue: PlayerViewModel.shared(
+            context: persistenceController.container.viewContext,
+            services: services
+        ))
         // Ensure default user and library exist
         ensureDefaultData()
     }
@@ -39,6 +49,8 @@ struct KanoraApp: App {
         WindowGroup {
             ContentView()
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .environment(\.serviceContainer, services)
+                .environmentObject(playerViewModel)
                 .designSystem()
         }
         .commands {

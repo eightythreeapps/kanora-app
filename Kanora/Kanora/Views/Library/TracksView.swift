@@ -33,6 +33,7 @@ struct TracksView: View {
     @State private var lastTappedTrackID: Track.ID?
     @State private var lastTapTime = Date()
 
+    @Environment(\.serviceContainer) private var services
     private let services = ServiceContainer.shared
     private let logger = AppLogger.libraryView
 
