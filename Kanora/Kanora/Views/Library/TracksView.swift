@@ -17,6 +17,7 @@ import UIKit
 struct TracksView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject private var navigationState: NavigationState
+    @EnvironmentObject private var playerViewModel: PlayerViewModel
 
     @FetchRequest(
         sortDescriptors: [
@@ -33,8 +34,6 @@ struct TracksView: View {
     @State private var lastTappedTrackID: Track.ID?
     @State private var lastTapTime = Date()
 
-    @Environment(\.serviceContainer) private var services
-    private let services = ServiceContainer.shared
     private let logger = AppLogger.libraryView
 
 #if os(iOS)
@@ -109,16 +108,16 @@ struct TracksView: View {
                 logger.debug("🎯 Last tapped ID: \(String(describing: lastTappedTrackID))")
 
                 // Track double-click timing
-                if let trackID = newValue,
-                   let track = filteredTracks.first(where: { $0.id == trackID }) {
-                    logger.info("✅ Found track: \(track.title ?? "Unknown")")
+        if let trackID = newValue,
+           let track = filteredTracks.first(where: { $0.id == trackID }) {
+            logger.info("✅ Found track: \(track.title ?? "Unknown")")
 
-                    if trackID == lastTappedTrackID,
-                       Date().timeIntervalSince(lastTapTime) < 0.5 {
-                        // Double-click detected
-                        logger.debug("🖱️ Double-click detected on: \(track.title ?? "Unknown")")
-                        playTrack(track)
-                        lastTappedTrackID = nil
+            if trackID == lastTappedTrackID,
+               Date().timeIntervalSince(lastTapTime) < 0.5 {
+                // Double-click detected
+                logger.debug("🖱️ Double-click detected on: \(track.title ?? "Unknown")")
+                playTrack(track)
+                lastTappedTrackID = nil
                     } else {
                         // Single click
                         logger.debug("👆 Single click on: \(track.title ?? "Unknown")")
@@ -143,12 +142,22 @@ struct TracksView: View {
 
     private func playTrack(_ track: Track) {
         logger.info("🎵 Playing track: \(track.title ?? "Unknown")")
-        // Set queue to all filtered tracks, starting at the selected track
-        if let index = filteredTracks.firstIndex(of: track) {
-            services.audioPlayerService.setQueue(tracks: filteredTracks, startIndex: index)
+        guard let index = filteredTracks.firstIndex(of: track) else {
+            logger.error("❌ Selected track not found in filtered list")
+            return
         }
-        // Play the track
-        try? services.audioPlayerService.play(track: track)
+
+        let queue = makeViewData(from: filteredTracks)
+        playerViewModel.play(tracks: queue, startIndex: index)
+    }
+
+    private func makeViewData(from tracks: [Track]) -> [TrackViewData] {
+        tracks.compactMap { track in
+            if track.id == nil {
+                track.id = UUID()
+            }
+            return TrackViewData(track: track)
+        }
     }
 
     private struct TrackRowCompact: View {
