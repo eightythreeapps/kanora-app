@@ -12,6 +12,7 @@ import AppKit
 
 struct PlayerControlsView: View {
     @StateObject private var viewModel: PlayerViewModel
+    @ThemeAccess private var theme
 
     init(services: ServiceContainer) {
         // Use shared PlayerViewModel instance
@@ -22,33 +23,33 @@ struct PlayerControlsView: View {
     }
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: theme.spacing.sm) {
             // Now playing info
-            HStack(spacing: 12) {
+            HStack(spacing: theme.spacing.sm) {
                 // Album art placeholder
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.secondary.opacity(0.2))
+                RoundedRectangle(cornerRadius: theme.effects.radiusSM)
+                    .fill(theme.colors.surfaceSecondary.opacity(0.9))
                     .frame(width: 50, height: 50)
                     .overlay {
                         if viewModel.currentTrack != nil {
                             Image(systemName: "music.note")
-                                .foregroundColor(.secondary)
+                                .foregroundColor(theme.colors.textSecondary)
                         }
                     }
 
                 if let track = viewModel.currentTrack {
-                    VStack(alignment: .leading, spacing: 2) {
+                    VStack(alignment: .leading, spacing: theme.spacing.xxxs) {
                         Text(track.title ?? String(localized: "library.unknown_track"))
-                            .font(.headline)
+                            .font(theme.typography.titleSmall)
+                            .foregroundColor(theme.colors.textPrimary)
                             .lineLimit(1)
                         Text(track.album?.artist?.name ?? String(localized: "library.unknown_artist"))
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .themedSecondaryText()
                             .lineLimit(1)
                     }
                 } else {
                     Text(L10n.Player.noTrackPlaying)
-                        .foregroundColor(.secondary)
+                        .themedSecondaryText()
                 }
             }
             .frame(minWidth: 150, idealWidth: 250, maxWidth: 300)
@@ -56,35 +57,38 @@ struct PlayerControlsView: View {
             Spacer()
 
             // Playback controls
-            VStack(spacing: 8) {
-                HStack(spacing: 16) {
+            VStack(spacing: theme.spacing.xs) {
+                HStack(spacing: theme.spacing.lg) {
                     Button(action: viewModel.skipToPrevious) {
                         Image(systemName: "backward.fill")
-                            .font(.title3)
+                            .font(theme.typography.titleSmall)
+                            .foregroundColor(theme.colors.textPrimary)
                     }
                     .buttonStyle(.plain)
                     .disabled(viewModel.currentTrack == nil)
 
                     Button(action: viewModel.togglePlayPause) {
                         Image(systemName: viewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                            .font(.system(size: 36))
+                            .font(theme.typography.headlineMedium)
+                            .foregroundColor(theme.colors.accent)
                     }
                     .buttonStyle(.plain)
                     .disabled(viewModel.currentTrack == nil)
 
                     Button(action: viewModel.skipToNext) {
                         Image(systemName: "forward.fill")
-                            .font(.title3)
+                            .font(theme.typography.titleSmall)
+                            .foregroundColor(theme.colors.textPrimary)
                     }
                     .buttonStyle(.plain)
                     .disabled(viewModel.currentTrack == nil)
                 }
 
                 // Progress bar
-                HStack(spacing: 8) {
+                HStack(spacing: theme.spacing.xs) {
                     Text(viewModel.currentTimeFormatted)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.bodySmall)
+                        .foregroundColor(theme.colors.textSecondary)
                         .monospacedDigit()
 
                     Slider(value: $viewModel.currentTime, in: 0...viewModel.duration) { editing in
@@ -94,10 +98,11 @@ struct PlayerControlsView: View {
                     }
                     .frame(minWidth: 150, idealWidth: 300, maxWidth: 400)
                     .disabled(viewModel.currentTrack == nil)
+                    .tint(theme.colors.accent)
 
                     Text(viewModel.durationFormatted)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.bodySmall)
+                        .foregroundColor(theme.colors.textSecondary)
                         .monospacedDigit()
                 }
             }
@@ -105,32 +110,32 @@ struct PlayerControlsView: View {
             Spacer()
 
             // Volume control
-            HStack(spacing: 12) {
+            HStack(spacing: theme.spacing.sm) {
                 Button(action: viewModel.toggleMute) {
                     Image(systemName: viewModel.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                        .foregroundColor(theme.colors.textSecondary)
                 }
                 .buttonStyle(.plain)
 
                 Slider(value: $viewModel.volume, in: 0...1)
                     .frame(minWidth: 60, idealWidth: 100, maxWidth: 120)
+                    .tint(theme.colors.accent)
             }
             .frame(minWidth: 100, idealWidth: 150, maxWidth: 200)
         }
-        .padding()
-#if os(macOS)
-        .background(Color(nsColor: .windowBackgroundColor))
-#else
-        .background(Color(.systemBackground))
-#endif
+        .padding(theme.spacing.md)
+        .background(theme.colors.surface)
         .frame(minHeight: 80, idealHeight: 80, maxHeight: 100)
     }
 }
 
 #Preview("Populated") {
     PreviewFactory.makePlayerControlsView(state: .populated)
+        .designSystem()
 }
 
 #Preview("Empty") {
     PreviewFactory.makePlayerControlsView(state: .empty)
+        .designSystem()
 }
 
