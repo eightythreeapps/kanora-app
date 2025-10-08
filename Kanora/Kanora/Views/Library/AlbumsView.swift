@@ -153,6 +153,7 @@ struct AlbumGridItem: View {
 
 struct AlbumDetailView: View {
     let album: Album
+    private let services = ServiceContainer.shared
 
     private var tracks: [Track] {
         guard let tracksSet = album.tracks as? Set<Track> else { return [] }
@@ -217,7 +218,8 @@ struct AlbumDetailView: View {
                     // Play All button
                     if !tracks.isEmpty {
                         Button(action: {
-                            // TODO: Play all tracks
+                            print("▶️ Play All button pressed for album: \(album.title ?? "Unknown")")
+                            playAlbum()
                         }) {
                             Label(L10n.Actions.play, systemImage: "play.fill")
                                 .font(.headline)
@@ -254,6 +256,14 @@ struct AlbumDetailView: View {
                 List {
                     ForEach(tracks) { track in
                         TrackRowView(track: track)
+                            .contentShape(Rectangle())
+                            .onTapGesture(count: 2) {
+                                print("🖱️ Double-click on track: \(track.title ?? "Unknown")")
+                                playTrack(track)
+                            }
+                            .onTapGesture(count: 1) {
+                                print("👆 Single-click on track: \(track.title ?? "Unknown")")
+                            }
                     }
                 }
                 .listStyle(.plain)
@@ -261,22 +271,73 @@ struct AlbumDetailView: View {
         }
         .navigationTitle(album.title ?? String(localized: "library.unknown_album"))
     }
+
+    // MARK: - Playback Methods
+
+    private func playAlbum() {
+        guard !tracks.isEmpty else {
+            print("❌ No tracks to play")
+            return
+        }
+        print("🎵 Playing album with \(tracks.count) tracks")
+        services.audioPlayerService.setQueue(tracks: tracks, startIndex: 0)
+        try? services.audioPlayerService.play(track: tracks[0])
+    }
+
+    private func playTrack(_ track: Track) {
+        guard let index = tracks.firstIndex(of: track) else {
+            print("❌ Track not found in album")
+            return
+        }
+        print("🎵 Playing track at index \(index): \(track.title ?? "Unknown")")
+        services.audioPlayerService.setQueue(tracks: tracks, startIndex: index)
+        try? services.audioPlayerService.play(track: track)
+    }
 }
 
 struct TrackRowView: View {
     let track: Track
+    @StateObject private var playerViewModel: PlayerViewModel
+    private let services = ServiceContainer.shared
+
+    init(track: Track) {
+        self.track = track
+        _playerViewModel = StateObject(wrappedValue: PlayerViewModel.shared(
+            context: ServiceContainer.shared.persistence.viewContext,
+            services: ServiceContainer.shared
+        ))
+    }
+
+    private var isCurrentTrack: Bool {
+        playerViewModel.currentTrack?.id == track.id
+    }
+
+    private var isPlaying: Bool {
+        isCurrentTrack && playerViewModel.isPlaying
+    }
 
     var body: some View {
         HStack(spacing: 12) {
-            // Track number
-            Text("\(track.trackNumber)")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .monospacedDigit()
+            // Track number or playing indicator
+            if isPlaying {
+                Image(systemName: "speaker.wave.2.fill")
+                    .font(.subheadline)
+                    .foregroundColor(.accentColor)
+            } else if isCurrentTrack {
+                Image(systemName: "pause.fill")
+                    .font(.caption)
+                    .foregroundColor(.accentColor)
+            } else {
+                Text("\(track.trackNumber)")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .monospacedDigit()
+            }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(track.title ?? String(localized: "library.unknown_track"))
                     .font(.body)
+                    .foregroundColor(isCurrentTrack ? .accentColor : .primary)
 
                 if let format = track.format {
                     HStack(spacing: 4) {

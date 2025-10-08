@@ -94,11 +94,7 @@ struct ContentView: View {
                 message: L10n.Placeholders.cdRippingMessage
             )
         case .importFiles:
-            PlaceholderView(
-                icon: "square.and.arrow.down",
-                title: L10n.Navigation.importFiles,
-                message: L10n.Placeholders.importFilesMessage
-            )
+            ImportFilesView(services: services)
         case .preferences:
             PlaceholderView(
                 icon: "gearshape",
@@ -152,11 +148,7 @@ struct ContentView: View {
                 message: L10n.Placeholders.cdRippingMessage
             )
         case .importFiles:
-            PlaceholderView(
-                icon: "square.and.arrow.down",
-                title: L10n.Navigation.importFiles,
-                message: L10n.Placeholders.importFilesMessage
-            )
+            ImportFilesView(services: services)
         case .preferences:
             PlaceholderView(
                 icon: "gearshape",

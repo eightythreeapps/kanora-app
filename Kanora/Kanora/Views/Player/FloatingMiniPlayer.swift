@@ -16,7 +16,8 @@ struct FloatingMiniPlayer: View {
     @State private var isExpanded = false
 
     init(services: ServiceContainer) {
-        _viewModel = StateObject(wrappedValue: PlayerViewModel(
+        // Use shared PlayerViewModel instance
+        _viewModel = StateObject(wrappedValue: PlayerViewModel.shared(
             context: services.persistence.viewContext,
             services: services
         ))

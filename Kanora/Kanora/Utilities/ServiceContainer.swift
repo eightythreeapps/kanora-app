@@ -30,6 +30,9 @@ class ServiceContainer {
     /// API server service
     let apiServerService: APIServerServiceProtocol
 
+    /// File import service
+    let fileImportService: FileImportServiceProtocol
+
     /// Persistence controller for Core Data
     let persistence: PersistenceController
 
@@ -39,7 +42,8 @@ class ServiceContainer {
         persistence: PersistenceController,
         libraryService: LibraryServiceProtocol? = nil,
         audioPlayerService: AudioPlayerServiceProtocol? = nil,
-        apiServerService: APIServerServiceProtocol? = nil
+        apiServerService: APIServerServiceProtocol? = nil,
+        fileImportService: FileImportServiceProtocol? = nil
     ) {
         self.persistence = persistence
 
@@ -47,6 +51,7 @@ class ServiceContainer {
         self.libraryService = libraryService ?? LibraryService(persistence: persistence)
         self.audioPlayerService = audioPlayerService ?? AudioPlayerService()
         self.apiServerService = apiServerService ?? APIServerService()
+        self.fileImportService = fileImportService ?? FileImportService(persistence: persistence)
     }
 
 }
@@ -58,14 +63,16 @@ extension ServiceContainer {
     static func mock(
         libraryService: LibraryServiceProtocol? = nil,
         audioPlayerService: AudioPlayerServiceProtocol? = nil,
-        apiServerService: APIServerServiceProtocol? = nil
+        apiServerService: APIServerServiceProtocol? = nil,
+        fileImportService: FileImportServiceProtocol? = nil
     ) -> ServiceContainer {
         let persistence = PersistenceController(inMemory: true)
         return ServiceContainer(
             persistence: persistence,
             libraryService: libraryService,
             audioPlayerService: audioPlayerService,
-            apiServerService: apiServerService
+            apiServerService: apiServerService,
+            fileImportService: fileImportService
         )
     }
 }

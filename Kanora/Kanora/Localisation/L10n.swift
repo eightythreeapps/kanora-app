@@ -220,13 +220,36 @@ enum L10n {
 
     /// Import/CD Ripping strings
     enum Import {
+        // File import
         static let selectFiles = LocalizedStringKey("import.select_files")
         static let selectFolder = LocalizedStringKey("import.select_folder")
         static let importing = LocalizedStringKey("import.importing")
-        static let importComplete = LocalizedStringKey("import.complete")
+        static let importComplete: (Int) -> LocalizedStringKey = { count in
+            LocalizedStringKey("import.complete \(count)")
+        }
         static let filesImported: (Int) -> LocalizedStringKey = { count in
             LocalizedStringKey("import.files_imported \(count)")
         }
+        static let filesSelected: (Int) -> LocalizedStringKey = { count in
+            LocalizedStringKey("import.files_selected \(count)")
+        }
+        static let invalidFilesSkipped: (Int) -> LocalizedStringKey = { count in
+            LocalizedStringKey("import.invalid_files_skipped \(count)")
+        }
+        static let noLibrarySelected = LocalizedStringKey("import.no_library_selected")
+        static let dropFilesHere = LocalizedStringKey("import.drop_files_here")
+        static let selectLibrary = LocalizedStringKey("import.select_library")
+        static let startImport = LocalizedStringKey("import.start_import")
+        static let clearSelection = LocalizedStringKey("import.clear_selection")
+
+        // Status messages
+        static let preparing = LocalizedStringKey("import.preparing")
+        static let importingFiles = LocalizedStringKey("import.importing_files")
+        static let importingFile: (String) -> LocalizedStringKey = { file in
+            LocalizedStringKey("import.importing_file \(file)")
+        }
+        static let extractingMetadata = LocalizedStringKey("import.extracting_metadata")
+        static let copyingFiles = LocalizedStringKey("import.copying_files")
 
         // CD Ripping
         static let cdRipping = LocalizedStringKey("import.cd_ripping")

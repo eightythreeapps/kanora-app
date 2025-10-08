@@ -12,6 +12,19 @@ import Combine
 /// ViewModel for managing playback state and controls
 @MainActor
 class PlayerViewModel: BaseViewModel {
+    // MARK: - Shared Instance
+
+    private static var sharedInstance: PlayerViewModel?
+
+    static func shared(context: NSManagedObjectContext, services: ServiceContainer) -> PlayerViewModel {
+        if let existing = sharedInstance {
+            return existing
+        }
+        let instance = PlayerViewModel(context: context, services: services)
+        sharedInstance = instance
+        return instance
+    }
+
     // MARK: - Published Properties
 
     @Published var currentTrack: Track?
@@ -95,11 +108,24 @@ class PlayerViewModel: BaseViewModel {
     // MARK: - Private Methods
 
     private func subscribeToPlayerState() {
+        print("🔗 PlayerViewModel subscribing to player state")
+
         // Subscribe to playback state changes
         services.audioPlayerService.statePublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
+                print("🎵 Playback state changed: \(state)")
                 self?.isPlaying = state.isPlaying
+
+                // Update current track from service
+                if let currentTrack = self?.services.audioPlayerService.currentTrack {
+                    print("📀 Current track: \(currentTrack.title ?? "Unknown")")
+                    self?.currentTrack = currentTrack
+                    self?.duration = currentTrack.duration
+                } else if state == .idle || state == .stopped {
+                    self?.currentTrack = nil
+                    self?.duration = 0
+                }
             }
             .store(in: &cancellables)
 
@@ -115,6 +141,7 @@ class PlayerViewModel: BaseViewModel {
         $currentTrack
             .compactMap { $0 }
             .sink { [weak self] track in
+                print("📊 Track changed in ViewModel: \(track.title ?? "Unknown")")
                 self?.duration = track.duration
             }
             .store(in: &cancellables)
