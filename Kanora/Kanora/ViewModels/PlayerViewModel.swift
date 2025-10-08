@@ -12,19 +12,6 @@ import Combine
 /// ViewModel for managing playback state and controls
 @MainActor
 class PlayerViewModel: BaseViewModel {
-    // MARK: - Shared Instance
-
-    private static var sharedInstance: PlayerViewModel?
-
-    static func shared(context: NSManagedObjectContext, services: ServiceContainer) -> PlayerViewModel {
-        if let existing = sharedInstance {
-            return existing
-        }
-        let instance = PlayerViewModel(context: context, services: services)
-        sharedInstance = instance
-        return instance
-    }
-
     // MARK: - Published Properties
 
     @Published var currentTrack: Track?
@@ -46,8 +33,12 @@ class PlayerViewModel: BaseViewModel {
 
     // MARK: - Lifecycle
 
+    private var hasSubscribedToPlayerState = false
+
     override func onAppear() {
         super.onAppear()
+        guard !hasSubscribedToPlayerState else { return }
+        hasSubscribedToPlayerState = true
         subscribeToPlayerState()
     }
 

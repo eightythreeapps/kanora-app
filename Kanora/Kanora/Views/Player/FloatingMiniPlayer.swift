@@ -11,17 +11,9 @@ import AppKit
 #endif
 
 struct FloatingMiniPlayer: View {
-    @StateObject private var viewModel: PlayerViewModel
+    @EnvironmentObject private var viewModel: PlayerViewModel
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var isExpanded = false
-
-    init(services: ServiceContainer) {
-        // Use shared PlayerViewModel instance
-        _viewModel = StateObject(wrappedValue: PlayerViewModel.shared(
-            context: services.persistence.viewContext,
-            services: services
-        ))
-    }
 
     var body: some View {
         Group {
@@ -261,11 +253,17 @@ struct FloatingMiniPlayer: View {
 }
 
 #Preview("Populated - Compact") {
-    FloatingMiniPlayer(services: ServiceContainer.preview)
+    let dependencies = PreviewFactory.makePreviewDependencies()
+    return FloatingMiniPlayer()
+        .environment(\.managedObjectContext, dependencies.services.persistence.viewContext)
         .environment(\.horizontalSizeClass, .compact)
+        .environmentObject(dependencies.playerViewModel)
 }
 
 #Preview("Populated - Regular") {
-    FloatingMiniPlayer(services: ServiceContainer.preview)
+    let dependencies = PreviewFactory.makePreviewDependencies()
+    return FloatingMiniPlayer()
+        .environment(\.managedObjectContext, dependencies.services.persistence.viewContext)
         .environment(\.horizontalSizeClass, .regular)
+        .environmentObject(dependencies.playerViewModel)
 }
