@@ -320,8 +320,13 @@ enum L10n {
         static let selectFilesPrompt = LocalizedStringKey("import.select_files_prompt")
         static let noFilesSelected = LocalizedStringKey("import.no_files_selected")
         static let noDirectorySelected = LocalizedStringKey("import.no_directory_selected")
+        static let errorNoFilesSelected = LocalizedStringKey("import.error.no_files_selected")
+        static let errorNoDirectorySelected = LocalizedStringKey("import.error.no_directory_selected")
         static let libraryPointSuccess: (String) -> LocalizedStringKey = { name in
             LocalizedStringKey("import.library_point_success \(name)")
+        }
+        static let importSuccess: (Int) -> LocalizedStringKey = { count in
+            LocalizedStringKey("import.success \(count)")
         }
         static let progressFraction: (Int, Int) -> LocalizedStringKey = { processed, total in
             LocalizedStringKey("import.progress_fraction \(processed) \(total)")
@@ -385,6 +390,14 @@ enum L10n {
             L10n.localizedString(forKey: "import.no_directory_selected")
         }
 
+        static func errorNoFilesSelectedText() -> String {
+            L10n.localizedString(forKey: "import.error.no_files_selected")
+        }
+
+        static func errorNoDirectorySelectedText() -> String {
+            L10n.localizedString(forKey: "import.error.no_directory_selected")
+        }
+
         static func importingFileText(_ file: String) -> String {
             String(localized: "import.importing_file \(file)")
         }
@@ -407,6 +420,10 @@ enum L10n {
 
         static func libraryPointSuccessText(_ name: String) -> String {
             String(localized: "import.library_point_success \(name)")
+        }
+
+        static func importSuccessText(_ count: Int) -> String {
+            String(localized: "import.success \(count)")
         }
 
         static func progressFractionText(processed: Int, total: Int) -> String {
