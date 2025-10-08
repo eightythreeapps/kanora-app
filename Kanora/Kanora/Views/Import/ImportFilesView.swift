@@ -59,8 +59,9 @@ struct ImportFilesView: View {
             // Import Mode Selector - Card-based
             VStack(alignment: .leading, spacing: 12) {
                 Text(L10n.Import.chooseMethod)
-                    .font(.headline)
-                    .padding(.horizontal)
+                    .font(theme.typography.titleSmall)
+                    .foregroundColor(theme.colors.textPrimary)
+                    .padding(.horizontal, theme.spacing.md)
 
                 HStack(spacing: theme.spacing.md) {
                     ForEach(ImportMode.allCases, id: \.self) { mode in
@@ -211,8 +212,7 @@ struct ImportFilesView: View {
                 .foregroundColor(theme.colors.textSecondary)
 
             Text(L10n.Import.supportedFormats)
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .themedSecondaryText()
 
             Button(action: {
                 viewModel.showFilePicker = true
@@ -246,7 +246,8 @@ struct ImportFilesView: View {
         VStack(spacing: theme.spacing.xs) {
             HStack {
                 Text(L10n.Import.filesSelected(viewModel.selectedFiles.count))
-                    .font(.headline)
+                    .font(theme.typography.titleSmall)
+                    .foregroundColor(theme.colors.textPrimary)
                 Spacer()
                 Button(action: viewModel.clearFiles) {
                     Text(L10n.Import.clearSelection)
@@ -292,8 +293,7 @@ struct ImportFilesView: View {
             }
 
             Text(L10n.Import.progressFraction(viewModel.filesProcessed, viewModel.totalFiles))
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .themedSecondaryText()
         }
         .padding(theme.spacing.md)
     }

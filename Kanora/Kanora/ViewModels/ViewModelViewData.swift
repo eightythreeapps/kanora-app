@@ -42,7 +42,7 @@ struct LibrarySummary: Identifiable, Equatable {
 
         self.init(
             id: id,
-            name: library.name?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty ?? "Untitled Library",
+            name: library.name?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty ?? L10n.Library.unknownLibraryName,
             path: library.path ?? "",
             type: library.type ?? "local",
             isDefault: library.isDefault,
@@ -83,9 +83,9 @@ struct TrackViewData: Identifiable, Equatable {
 
         self.init(
             id: id,
-            title: track.title?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty ?? "Unknown Track",
-            artistName: track.album?.artist?.name?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty ?? "Unknown Artist",
-            albumTitle: track.album?.title?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty ?? "Unknown Album",
+            title: track.title?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty ?? L10n.Library.unknownTrackName,
+            artistName: track.album?.artist?.name?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty ?? L10n.Library.unknownArtistName,
+            albumTitle: track.album?.title?.trimmingCharacters(in: .whitespacesAndNewlines).nonEmpty ?? L10n.Library.unknownAlbumName,
             duration: track.duration,
             artworkPath: track.album?.artworkPath
         )
