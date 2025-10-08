@@ -84,12 +84,19 @@ struct AlbumsView: View {
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 16) {
                         ForEach(filteredAlbums) { album in
-                            Button(action: {
-                                navigationState.selectAlbum(album)
-                            }) {
-                                AlbumGridItem(album: album)
+                            if #available(iOS 16.0, macOS 13.0, *) {
+                                NavigationLink(value: album) {
+                                    AlbumGridItem(album: album)
+                                }
+                                .buttonStyle(.plain)
+                            } else {
+                                Button(action: {
+                                    navigationState.selectAlbum(album)
+                                }) {
+                                    AlbumGridItem(album: album)
+                                }
+                                .buttonStyle(.plain)
                             }
-                            .buttonStyle(.plain)
                         }
                     }
                     .padding()
@@ -105,12 +112,6 @@ struct AlbumsView: View {
                     .foregroundColor(.secondary)
             }
         }
-        .onAppear {
-            // Auto-select first album if none selected
-            if navigationState.selectedAlbum == nil, let first = filteredAlbums.first {
-                navigationState.selectAlbum(first)
-            }
-        }
     }
 }
 
@@ -119,15 +120,31 @@ struct AlbumGridItem: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            // Album art placeholder
-            RoundedRectangle(cornerRadius: 8)
-                .fill(Color.secondary.opacity(0.2))
-                .aspectRatio(1, contentMode: .fit)
-                .overlay {
-                    Image(systemName: "music.note")
-                        .font(.system(size: 40))
-                        .foregroundColor(.secondary)
+            // Album artwork
+            Group {
+                if let artworkImage = album.artworkImage {
+                    #if os(macOS)
+                    Image(nsImage: artworkImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                    #else
+                    Image(uiImage: artworkImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                    #endif
+                } else {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.secondary.opacity(0.2))
+                        .overlay {
+                            Image(systemName: "music.note")
+                                .font(.system(size: 40))
+                                .foregroundColor(.secondary)
+                        }
                 }
+            }
+            .aspectRatio(1, contentMode: .fit)
+            .cornerRadius(8)
+            .clipped()
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(album.title ?? String(localized: "library.unknown_album"))
@@ -171,15 +188,30 @@ struct AlbumDetailView: View {
             // Album header
             HStack(alignment: .top, spacing: 24) {
                 // Album artwork
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.secondary.opacity(0.2))
-                    .frame(width: 200, height: 200)
-                    .shadow(radius: 10, y: 5)
-                    .overlay {
-                        Image(systemName: "music.note")
-                            .font(.system(size: 60))
-                            .foregroundColor(.secondary)
+                Group {
+                    if let artworkImage = album.artworkImage {
+                        #if os(macOS)
+                        Image(nsImage: artworkImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                        #else
+                        Image(uiImage: artworkImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                        #endif
+                    } else {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.secondary.opacity(0.2))
+                            .overlay {
+                                Image(systemName: "music.note")
+                                    .font(.system(size: 60))
+                                    .foregroundColor(.secondary)
+                            }
                     }
+                }
+                .frame(width: 200, height: 200)
+                .cornerRadius(12)
+                .shadow(radius: 10, y: 5)
 
                 VStack(alignment: .leading, spacing: 16) {
                     VStack(alignment: .leading, spacing: 8) {

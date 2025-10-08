@@ -56,6 +56,31 @@ struct FloatingMiniPlayer: View {
 
                 // Controls
                 HStack(spacing: 12) {
+                    // Album art
+                    Group {
+                        if let artworkImage = viewModel.currentTrack?.album?.artworkImage {
+                            #if os(macOS)
+                            Image(nsImage: artworkImage)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                            #else
+                            Image(uiImage: artworkImage)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                            #endif
+                        } else {
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.secondary.opacity(0.2))
+                                .overlay {
+                                    Image(systemName: "music.note")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                        }
+                    }
+                    .frame(width: 50, height: 50)
+                    .cornerRadius(4)
+
                     // Track info
                     if let track = viewModel.currentTrack {
                         VStack(alignment: .leading, spacing: 2) {
@@ -104,11 +129,10 @@ struct FloatingMiniPlayer: View {
             }
             .padding(.vertical, 8)
 #if os(macOS)
-            .background(Color(nsColor: .windowBackgroundColor).opacity(0.95))
+            .background(.ultraThinMaterial)
 #else
-            .background(Color(.systemBackground).opacity(0.95))
+            .background(.ultraThinMaterial)
 #endif
-            .shadow(radius: 10, y: -2)
         }
     }
 
@@ -118,14 +142,29 @@ struct FloatingMiniPlayer: View {
         VStack(spacing: 0) {
             HStack(spacing: 16) {
                 // Album art
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(Color.secondary.opacity(0.2))
-                    .frame(width: 60, height: 60)
-                    .overlay {
-                        Image(systemName: "music.note")
-                            .font(.title3)
-                            .foregroundColor(.secondary)
+                Group {
+                    if let artworkImage = viewModel.currentTrack?.album?.artworkImage {
+                        #if os(macOS)
+                        Image(nsImage: artworkImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                        #else
+                        Image(uiImage: artworkImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                        #endif
+                    } else {
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(Color.secondary.opacity(0.2))
+                            .overlay {
+                                Image(systemName: "music.note")
+                                    .font(.title3)
+                                    .foregroundColor(.secondary)
+                            }
                     }
+                }
+                .frame(width: 60, height: 60)
+                .cornerRadius(6)
 
                 // Track info
                 if let track = viewModel.currentTrack {
@@ -206,17 +245,17 @@ struct FloatingMiniPlayer: View {
                         Image(systemName: viewModel.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
                     }
                     .buttonStyle(.plain)
-
+                    
                     Slider(value: $viewModel.volume, in: 0...1)
                 }
+                .frame(maxWidth: 200)
             }
             .padding()
 #if os(macOS)
-            .background(Color(nsColor: .windowBackgroundColor).opacity(0.95))
+            .background(.ultraThinMaterial)
 #else
-            .background(Color(.systemBackground).opacity(0.95))
+            .background(.ultraThinMaterial)
 #endif
-            .shadow(radius: 10, y: -2)
         }
     }
 }

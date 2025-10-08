@@ -13,10 +13,26 @@ struct KanoraApp: App {
     let persistenceController = PersistenceController.shared
 
     init() {
-        // Seed test data in debug mode
-        #if DEBUG
-        seedTestDataIfNeeded()
-        #endif
+        // Ensure default user and library exist
+        ensureDefaultData()
+    }
+
+    private func ensureDefaultData() {
+        let context = persistenceController.container.viewContext
+
+        // Check if any users exist
+        let userRequest = User.fetchRequest()
+        userRequest.fetchLimit = 1
+
+        do {
+            let existingUsers = try context.fetch(userRequest)
+            if existingUsers.isEmpty {
+                // No users exist, create default user and library
+                try persistenceController.createDefaultUserAndLibrary()
+            }
+        } catch {
+            print("⚠️ Error checking/creating default data: \(error)")
+        }
     }
 
     var body: some Scene {
@@ -90,26 +106,6 @@ struct KanoraApp: App {
         }
     }
 
-    // MARK: - Private Methods
-
-    private func seedTestDataIfNeeded() {
-        let context = persistenceController.container.viewContext
-
-        // Check if data already exists
-        let userRequest = User.fetchRequest()
-        userRequest.predicate = NSPredicate(format: "username == %@", "TestUser")
-
-        do {
-            let existingUsers = try context.fetch(userRequest)
-            if existingUsers.isEmpty {
-                // No test data exists, seed it
-                try TestDataSeeder.seedOasisDiscography(in: context)
-            }
-        } catch {
-            // Log error but don't crash the app
-            print("Error checking or seeding test data: \(error)")
-        }
-    }
 }
 
 // MARK: - Notification Names

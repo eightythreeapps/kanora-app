@@ -45,11 +45,8 @@ struct ContentView: View {
             sidebar: {
                 SidebarView(navigationState: navigationState, navigationMode: .split)
             },
-            content: {
-                contentColumn
-            },
             detail: {
-                detailColumn
+                contentColumn
             }
         )
         .environment(\.managedObjectContext, viewContext)
@@ -107,6 +104,8 @@ struct ContentView: View {
                 title: L10n.Navigation.apiServer,
                 message: L10n.Placeholders.apiServerMessage
             )
+        case .devTools:
+            DevToolsView(services: services)
         }
     }
 
@@ -117,10 +116,6 @@ struct ContentView: View {
             Divider()
 
             contentColumn
-
-            Divider()
-
-            detailColumn
         }
         .environment(\.managedObjectContext, viewContext)
         .environmentObject(navigationState)
@@ -132,9 +127,30 @@ struct ContentView: View {
     private var contentColumn: some View {
         switch navigationState.selectedDestination {
         case .artists:
-            ArtistsView()
+            if #available(iOS 16.0, macOS 13.0, *) {
+                NavigationStack {
+                    ArtistsView()
+                        .navigationDestination(for: Artist.self) { artist in
+                            ArtistDetailView(artist: artist)
+                                .navigationDestination(for: Album.self) { album in
+                                    AlbumDetailView(album: album)
+                                }
+                        }
+                }
+            } else {
+                ArtistsView()
+            }
         case .albums:
-            AlbumsView()
+            if #available(iOS 16.0, macOS 13.0, *) {
+                NavigationStack {
+                    AlbumsView()
+                        .navigationDestination(for: Album.self) { album in
+                            AlbumDetailView(album: album)
+                        }
+                }
+            } else {
+                AlbumsView()
+            }
         case .tracks:
             TracksView()
         case .playlists:
@@ -161,61 +177,9 @@ struct ContentView: View {
                 title: L10n.Navigation.apiServer,
                 message: L10n.Placeholders.apiServerMessage
             )
+        case .devTools:
+            DevToolsView(services: services)
         }
-    }
-
-    @ViewBuilder
-    private var detailColumn: some View {
-        // Show detail based on selection state
-        switch navigationState.selectedDestination {
-        case .artists:
-            if let album = navigationState.selectedAlbum {
-                AlbumDetailView(album: album)
-            } else if let artist = navigationState.selectedArtist {
-                ArtistDetailView(artist: artist)
-            } else {
-                emptyDetailView(
-                    icon: "music.mic",
-                    message: L10n.Placeholders.selectArtistMessage
-                )
-            }
-
-        case .albums:
-            if let album = navigationState.selectedAlbum {
-                AlbumDetailView(album: album)
-            } else {
-                emptyDetailView(
-                    icon: "square.stack",
-                    message: L10n.Placeholders.albumDetailMessage
-                )
-            }
-
-        case .tracks, .playlists:
-            emptyDetailView(
-                icon: "music.note.list",
-                message: L10n.Common.selectItem
-            )
-
-        case .nowPlaying:
-            NowPlayingView(services: services)
-
-        case .cdRipping, .importFiles, .preferences, .apiServer:
-            // For placeholder views, show them in the detail column
-            contentColumn
-        }
-    }
-
-    private func emptyDetailView(icon: String, message: LocalizedStringKey) -> some View {
-        VStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 64))
-                .foregroundColor(.secondary)
-            Text(message)
-                .font(.headline)
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(.bottom, 100)
     }
 }
 

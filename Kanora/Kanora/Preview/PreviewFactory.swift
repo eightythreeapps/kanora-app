@@ -210,6 +210,17 @@ struct PreviewFactory {
             print("❌ Failed to save preview context: \(error)")
         }
     }
+
+    // MARK: - Settings Views
+
+    /// Creates DevToolsView with preview data
+    static func makeDevToolsView(state: PreviewState = .populated) -> some View {
+        let container = createContainer(for: state)
+        let services = ServiceContainer(persistence: PersistenceController(inMemory: true))
+        return DevToolsView(services: services)
+            .environment(\.managedObjectContext, container.viewContext)
+            .designSystem()
+    }
 }
 
 // MARK: - Preview Helpers

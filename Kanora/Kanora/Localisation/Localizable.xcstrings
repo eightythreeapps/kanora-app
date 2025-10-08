@@ -438,7 +438,19 @@
     "Album" : {
 
     },
+    "Albums" : {
+
+    },
     "Artist" : {
+
+    },
+    "Artist biography will be displayed here. This could include information about the artist's background, musical style, and career highlights." : {
+
+    },
+    "Biography" : {
+
+    },
+    "Choose Import Method" : {
 
     },
     "common.app_name" : {
@@ -459,6 +471,83 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Select an item"
+          }
+        }
+      }
+    },
+    "development.clear_all_data" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clear All Data"
+          }
+        }
+      }
+    },
+    "development.clear_all_data_description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete all Core Data, settings, and music files in the Kanora directory. Files outside the Kanora directory will not be deleted."
+          }
+        }
+      }
+    },
+    "development.clear_data_confirm" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Are you sure you want to clear all data?"
+          }
+        }
+      }
+    },
+    "development.clear_data_failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to clear data"
+          }
+        }
+      }
+    },
+    "development.clear_data_warning" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This will delete all libraries, tracks, playlists, and settings. This action cannot be undone."
+          }
+        }
+      }
+    },
+    "development.data_cleared" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All data has been cleared"
+          }
+        }
+      }
+    },
+    "development.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Development Tools"
           }
         }
       }
@@ -781,9 +870,6 @@
           }
         }
       }
-    },
-    "Import Mode" : {
-
     },
     "import.cd_ripping" : {
       "extractionState" : "manual",
@@ -1505,6 +1591,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "CD Ripping"
+          }
+        }
+      }
+    },
+    "navigation.dev_tools" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Development Tools"
+          }
+        }
+      }
+    },
+    "navigation.development" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Development"
           }
         }
       }

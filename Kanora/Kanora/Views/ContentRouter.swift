@@ -59,6 +59,8 @@ struct ContentRouter: View {
                         title: L10n.Navigation.apiServer,
                         message: L10n.Placeholders.apiServerMessage
                     )
+                case .devTools:
+                    DevToolsView(services: services)
                 }
             }
         }

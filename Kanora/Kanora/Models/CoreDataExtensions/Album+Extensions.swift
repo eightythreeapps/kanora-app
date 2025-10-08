@@ -8,6 +8,12 @@
 import Foundation
 import CoreData
 
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
+
 extension Album {
     /// Convenience initializer for creating a new Album
     convenience init(
@@ -93,4 +99,17 @@ extension Album {
             return String(format: "%d:%02d", minutes, seconds)
         }
     }
+
+    /// Load artwork image from file path
+    #if os(macOS)
+    var artworkImage: NSImage? {
+        guard let artworkPath = artworkPath else { return nil }
+        return NSImage(contentsOfFile: artworkPath)
+    }
+    #else
+    var artworkImage: UIImage? {
+        guard let artworkPath = artworkPath else { return nil }
+        return UIImage(contentsOfFile: artworkPath)
+    }
+    #endif
 }

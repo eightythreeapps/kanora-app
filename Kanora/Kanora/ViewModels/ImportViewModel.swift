@@ -17,14 +17,16 @@ class ImportViewModel: BaseViewModel {
     @Published var viewState: ViewState = .idle
     @Published var selectedLibrary: Library?
     @Published var availableLibraries: [Library] = []
-    @Published var importMode: ImportMode = .leaveInPlace
+    @Published var importMode: ImportMode = .addToKanora
     @Published var importProgress: Double = 0.0
     @Published var currentFile: String?
     @Published var filesProcessed: Int = 0
     @Published var totalFiles: Int = 0
     @Published var importStatus: String = ""
     @Published var showFilePicker = false
+    @Published var showDirectoryPicker = false
     @Published var selectedFiles: [URL] = []
+    @Published var selectedDirectory: URL?
     @Published var importErrors: [String] = []
 
     // MARK: - Computed Properties
@@ -62,7 +64,7 @@ class ImportViewModel: BaseViewModel {
             fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \Library.name, ascending: true)]
             availableLibraries = try context.fetch(fetchRequest)
 
-            // Auto-select first library
+            // Auto-select first library (default user and library are created by app init)
             if selectedLibrary == nil {
                 selectedLibrary = availableLibraries.first
             }
@@ -103,18 +105,82 @@ class ImportViewModel: BaseViewModel {
 
     func clearFiles() {
         selectedFiles.removeAll()
+        selectedDirectory = nil
         importErrors.removeAll()
         viewState = .idle
+    }
+
+    func selectDirectory(_ directoryURL: URL) {
+        print("📂 selectDirectory called: \(directoryURL.path)")
+        selectedDirectory = directoryURL
+
+        // Scan directory for audio files
+        let audioFiles = services.fileImportService.scanDirectory(directoryURL)
+        selectedFiles = audioFiles
+
+        print("🎵 Found \(audioFiles.count) audio files in directory")
     }
 
     func startImport() {
         print("🚀 startImport called")
         print("📁 Selected files count: \(selectedFiles.count)")
+        print("📂 Import mode: \(importMode.displayName)")
         print("📚 Selected library: \(selectedLibrary?.name ?? "nil")")
 
-        guard let library = selectedLibrary, !selectedFiles.isEmpty else {
-            print("❌ Guard failed - library: \(selectedLibrary != nil), files: \(!selectedFiles.isEmpty)")
+        guard let library = selectedLibrary else {
+            print("❌ No library selected")
             viewState = .error("No library selected")
+            return
+        }
+
+        // For "Point at Directory" mode, use the pointAtDirectory method
+        if importMode == .pointAtDirectory {
+            guard let directory = selectedDirectory else {
+                print("❌ No directory selected")
+                viewState = .error("No directory selected for Point at Directory mode")
+                return
+            }
+
+            print("📍 Pointing library at directory: \(directory.path)")
+            viewState = .loading
+            importProgress = 0.0
+            filesProcessed = 0
+            importErrors.removeAll()
+
+            services.fileImportService
+                .pointAtDirectory(directory, library: library, in: context)
+                .receive(on: DispatchQueue.main)
+                .sink(
+                    receiveCompletion: { [weak self] completion in
+                        guard let self = self else { return }
+                        switch completion {
+                        case .finished:
+                            self.viewState = .loaded
+                            self.importStatus = "Library successfully pointed at \(directory.lastPathComponent)"
+                            self.selectedFiles.removeAll()
+                            self.selectedDirectory = nil
+                        case .failure(let error):
+                            self.viewState = .error(error.localizedDescription)
+                            self.handleError(error, context: "Pointing at directory")
+                        }
+                    },
+                    receiveValue: { [weak self] progress in
+                        guard let self = self else { return }
+                        self.importProgress = progress.percentage
+                        self.filesProcessed = progress.filesProcessed
+                        self.totalFiles = progress.totalFiles
+                        self.currentFile = progress.currentFile
+                        self.importStatus = self.statusForProgress(progress)
+                    }
+                )
+                .store(in: &cancellables)
+            return
+        }
+
+        // For "Add to Kanora" mode, files must be selected
+        guard !selectedFiles.isEmpty else {
+            print("❌ No files selected")
+            viewState = .error("No files selected")
             return
         }
 

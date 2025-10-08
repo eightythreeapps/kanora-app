@@ -312,4 +312,83 @@ struct PersistenceController {
 
         print("✅ Core Data stack reset")
     }
+
+    // MARK: - Development
+
+    /// Clears all application data (Core Data + files in Kanora directories)
+    /// Only deletes files in ~/Music/Kanora/ - leaves other files untouched
+    func clearAllData() throws {
+        print("🗑️ Starting clearAllData...")
+
+        // 1. Delete all Core Data entities
+        print("📦 Deleting Core Data entities...")
+        let entities = container.managedObjectModel.entities
+        for entity in entities {
+            guard let entityName = entity.name else { continue }
+
+            let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: entityName)
+            let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
+
+            try viewContext.execute(deleteRequest)
+            print("   ✅ Deleted all \(entityName) records")
+        }
+
+        try saveViewContext()
+        viewContext.reset()
+
+        // 2. Delete files in Kanora directories
+        print("📁 Deleting Kanora files...")
+        let musicDirectory = FileManager.default.urls(for: .musicDirectory, in: .userDomainMask).first!
+        let kanoraBaseURL = musicDirectory.appendingPathComponent("Kanora")
+
+        if FileManager.default.fileExists(atPath: kanoraBaseURL.path) {
+            print("   📂 Removing: \(kanoraBaseURL.path)")
+            try FileManager.default.removeItem(at: kanoraBaseURL)
+            print("   ✅ Kanora directory removed")
+        } else {
+            print("   ℹ️ Kanora directory doesn't exist")
+        }
+
+        // 3. Clear UserDefaults (settings)
+        print("⚙️ Clearing UserDefaults...")
+        if let bundleID = Bundle.main.bundleIdentifier {
+            UserDefaults.standard.removePersistentDomain(forName: bundleID)
+            UserDefaults.standard.synchronize()
+            print("   ✅ UserDefaults cleared")
+        }
+
+        // 4. Recreate default user and library
+        print("🔄 Recreating default user and library...")
+        try createDefaultUserAndLibrary()
+
+        print("✅ All data cleared successfully")
+    }
+
+    /// Creates a default user and library for initial setup
+    func createDefaultUserAndLibrary() throws {
+        let context = viewContext
+
+        // Create default user
+        let user = User(context: context)
+        user.id = UUID()
+        user.username = "DefaultUser"
+        user.email = "user@kanora.app"
+        user.createdAt = Date()
+        user.isActive = true
+        user.lastLoginAt = Date()
+
+        // Create default library
+        let library = Library(context: context)
+        library.id = UUID()
+        library.name = "My Music"
+        library.path = FileManager.default.urls(for: .musicDirectory, in: .userDomainMask).first?.path ?? "/Music"
+        library.type = "local"
+        library.isDefault = true
+        library.createdAt = Date()
+        library.updatedAt = Date()
+        library.user = user
+
+        try context.save()
+        print("   ✅ Created default user and library")
+    }
 }

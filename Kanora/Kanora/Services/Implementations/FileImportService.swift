@@ -79,40 +79,185 @@ class FileImportService: FileImportServiceProtocol {
         var discNumber: Int?
         var year: Int?
         var genre: String?
+        var artworkData: Data?
 
         for item in asset.commonMetadata {
-            guard let key = item.commonKey?.rawValue else { continue }
+            if let key = item.commonKey?.rawValue {
+                switch key {
+                case "title":
+                    title = item.stringValue
+                case "artist":
+                    artist = item.stringValue
+                case "albumName":
+                    albumTitle = item.stringValue
+                case "type":
+                    genre = item.stringValue
+                case "artwork":
+                    // Extract artwork data
+                    if let data = item.dataValue {
+                        print("🎨 Found artwork in common metadata: \(data.count) bytes")
+                        artworkData = data
+                    }
+                default:
+                    break
+                }
+            }
 
-            switch key {
-            case "title":
-                title = item.stringValue
-            case "artist":
-                artist = item.stringValue
-            case "albumName":
-                albumTitle = item.stringValue
-            case "type":
-                genre = item.stringValue
-            default:
-                break
+            // Always check identifiers for track number, disc number, etc.
+            if let identifier = item.identifier?.rawValue {
+                print("🔍 Common metadata identifier: \(identifier)")
+
+                // Track number - ALAC uses 'trkn', iTunes uses 'com.apple.iTunes.track-number'
+                if trackNumber == nil && (identifier.contains("trackNumber") || identifier.contains("trkn") || identifier == "com.apple.iTunes.track-number") {
+                    if let value = item.numberValue {
+                        trackNumber = value.intValue
+                        print("🔢 Found track number in common metadata (number): \(trackNumber!)")
+                    } else if let stringValue = item.stringValue {
+                        let components = stringValue.components(separatedBy: "/")
+                        if let value = Int(components[0]) {
+                            trackNumber = value
+                            print("🔢 Found track number in common metadata (string): \(trackNumber!)")
+                        }
+                    } else if let data = item.dataValue {
+                        // ALAC stores track numbers as binary data in iTunes-style 'trkn' atom
+                        // Format: [padding1, padding2, track_high_byte, track_low_byte, total_high_byte, total_low_byte]
+                        if data.count >= 4 {
+                            let bytes = [UInt8](data)
+                            let trackNum = Int(bytes[2]) * 256 + Int(bytes[3])
+                            if trackNum > 0 {
+                                trackNumber = trackNum
+                                print("🔢 Found track number in common metadata (binary): \(trackNumber!) from \(data.count) bytes")
+                            }
+                        }
+                    }
+                }
+
+                // Disc number
+                if discNumber == nil && (identifier.contains("discNumber") || identifier.contains("disk") || identifier == "com.apple.iTunes.disc-number") {
+                    if let value = item.numberValue {
+                        discNumber = value.intValue
+                        print("💿 Found disc number in common metadata (number): \(discNumber!)")
+                    } else if let stringValue = item.stringValue {
+                        let components = stringValue.components(separatedBy: "/")
+                        if let value = Int(components[0]) {
+                            discNumber = value
+                            print("💿 Found disc number in common metadata (string): \(discNumber!)")
+                        }
+                    }
+                }
             }
         }
 
-        // Try ID3 tags for MP3
-        if url.pathExtension.lowercased() == "mp3" {
-            for format in asset.availableMetadataFormats {
-                let metadata = asset.metadata(forFormat: format)
+        // Try all available metadata formats for additional tags
+        print("🔍 Available metadata formats: \(asset.availableMetadataFormats)")
+        for format in asset.availableMetadataFormats {
+            let metadata = asset.metadata(forFormat: format)
+            print("📋 Format: \(format.rawValue) - \(metadata.count) items")
 
-                for item in metadata {
-                    if let key = item.commonKey?.rawValue {
-                        switch key {
-                        case "title":
-                            title = title ?? item.stringValue
-                        case "artist":
-                            artist = artist ?? item.stringValue
-                        case "albumName":
-                            albumTitle = albumTitle ?? item.stringValue
-                        default:
-                            break
+            for item in metadata {
+                // Try common keys first
+                if let key = item.commonKey?.rawValue {
+                    switch key {
+                    case "title":
+                        title = title ?? item.stringValue
+                    case "artist":
+                        artist = artist ?? item.stringValue
+                    case "albumName":
+                        albumTitle = albumTitle ?? item.stringValue
+                    default:
+                        break
+                    }
+                }
+
+                // Check specific identifiers for track number, disc number, etc.
+                if let identifier = item.identifier?.rawValue {
+                    // Debug: log all identifiers to see what's available
+                    if trackNumber == nil || discNumber == nil {
+                        let valueDesc = item.stringValue ?? item.numberValue?.description ?? (item.dataValue != nil ? "<binary \(item.dataValue!.count) bytes>" : "nil")
+                        print("   🏷️ Identifier: \(identifier) - Value: \(valueDesc)")
+                    }
+
+                    // Track number - check for trkn (iTunes/ALAC), trackNumber, TRCK (ID3)
+                    if trackNumber == nil && (identifier.contains("trkn") || identifier.contains("trackNumber") || identifier.contains("TRCK")) {
+                        if let value = item.numberValue {
+                            trackNumber = value.intValue
+                            print("🔢 Found track number (number): \(trackNumber!)")
+                        } else if let stringValue = item.stringValue {
+                            // Handle formats like "3" or "3/12"
+                            let components = stringValue.components(separatedBy: "/")
+                            if let value = Int(components[0]) {
+                                trackNumber = value
+                                print("🔢 Found track number (string): \(trackNumber!)")
+                            }
+                        } else if let data = item.dataValue {
+                            // ALAC/iTunes stores track numbers as binary data
+                            // Format: [padding, padding, track_high_byte, track_low_byte, total_high, total_low]
+                            if data.count >= 4 {
+                                let bytes = [UInt8](data)
+                                let trackNum = Int(bytes[2]) * 256 + Int(bytes[3])
+                                if trackNum > 0 {
+                                    trackNumber = trackNum
+                                    print("🔢 Found track number (binary format): \(trackNumber!) from \(data.count) bytes")
+                                }
+                            } else if data.count >= 2 {
+                                // Sometimes it's just 2 bytes
+                                let bytes = [UInt8](data)
+                                let trackNum = Int(bytes[0]) * 256 + Int(bytes[1])
+                                if trackNum > 0 {
+                                    trackNumber = trackNum
+                                    print("🔢 Found track number (binary short format): \(trackNumber!) from \(data.count) bytes")
+                                }
+                            }
+                        }
+                    }
+
+                    // Disc number - check for disk, discNumber, TPOS
+                    if discNumber == nil && (identifier.contains("disk") || identifier.contains("discNumber") || identifier.contains("TPOS") || identifier.contains("partOfASet")) {
+                        if let value = item.numberValue {
+                            discNumber = value.intValue
+                            print("💿 Found disc number (number): \(discNumber!)")
+                        } else if let stringValue = item.stringValue {
+                            let components = stringValue.components(separatedBy: "/")
+                            if let value = Int(components[0]) {
+                                discNumber = value
+                                print("💿 Found disc number (string): \(discNumber!)")
+                            }
+                        } else if let data = item.dataValue {
+                            // Same binary format as track number
+                            if data.count >= 4 {
+                                let bytes = [UInt8](data)
+                                let discNum = Int(bytes[2]) * 256 + Int(bytes[3])
+                                if discNum > 0 {
+                                    discNumber = discNum
+                                    print("💿 Found disc number (binary): \(discNumber!)")
+                                }
+                            }
+                        }
+                    }
+
+                    // Year
+                    if year == nil && (identifier.contains("date") || identifier.contains("TDRC") || identifier.contains("TYER")) {
+                        if let stringValue = item.stringValue, stringValue.count >= 4 {
+                            if let value = Int(stringValue.prefix(4)) {
+                                year = value
+                                print("📅 Found year: \(year!)")
+                            }
+                        }
+                    }
+
+                    // Album Artist
+                    if albumArtist == nil && (identifier.contains("albumArtist") || identifier.contains("TPE2")) {
+                        albumArtist = item.stringValue
+                        if albumArtist != nil {
+                            print("👤 Found album artist: \(albumArtist!)")
+                        }
+                    }
+
+                    // Genre
+                    if genre == nil && (identifier.contains("genre") || identifier.contains("TCON")) {
+                        genre = item.stringValue
+                        if genre != nil {
+                            print("🎸 Found genre: \(genre!)")
                         }
                     }
                 }
@@ -153,7 +298,8 @@ class FileImportService: FileImportServiceProtocol {
             format: format ?? url.pathExtension.uppercased(),
             bitrate: bitrate,
             sampleRate: sampleRate,
-            fileSize: Int64(fileSize)
+            fileSize: Int64(fileSize),
+            artworkData: artworkData
         )
     }
 
@@ -173,6 +319,57 @@ class FileImportService: FileImportServiceProtocol {
         fetchRequest.fetchLimit = 1
 
         return try context.fetch(fetchRequest).first
+    }
+
+    func scanDirectory(_ directoryURL: URL) -> [URL] {
+        print("📂 Scanning directory: \(directoryURL.path)")
+        var audioFiles: [URL] = []
+
+        let fileManager = FileManager.default
+        guard let enumerator = fileManager.enumerator(
+            at: directoryURL,
+            includingPropertiesForKeys: [.isRegularFileKey],
+            options: [.skipsHiddenFiles, .skipsPackageDescendants]
+        ) else {
+            print("❌ Failed to create directory enumerator")
+            return []
+        }
+
+        for case let fileURL as URL in enumerator {
+            // Check if it's a file (not a directory)
+            guard let resourceValues = try? fileURL.resourceValues(forKeys: [.isRegularFileKey]),
+                  let isFile = resourceValues.isRegularFile,
+                  isFile else {
+                continue
+            }
+
+            // Check if it's an audio file
+            if isValidAudioFile(fileURL) {
+                audioFiles.append(fileURL)
+                print("  ✅ Found audio file: \(fileURL.lastPathComponent)")
+            }
+        }
+
+        print("📊 Scan complete: found \(audioFiles.count) audio files")
+        return audioFiles
+    }
+
+    func pointAtDirectory(
+        _ directoryURL: URL,
+        library: Library,
+        in context: NSManagedObjectContext
+    ) -> AnyPublisher<ImportProgress, Error> {
+        print("📍 Pointing library at directory: \(directoryURL.path)")
+
+        // Update library path to point at this directory
+        library.path = directoryURL.path
+
+        // Scan directory for audio files
+        let audioFiles = scanDirectory(directoryURL)
+        print("🎵 Found \(audioFiles.count) audio files to import")
+
+        // Import all files using "leave in place" mode
+        return importFiles(audioFiles, into: library, in: context, mode: .pointAtDirectory)
     }
 
     // MARK: - Private Methods
@@ -255,8 +452,8 @@ class FileImportService: FileImportServiceProtocol {
 
                     // Handle file based on import mode
                     let filePath: String
-                    if mode == .copyToLibrary {
-                        print("📁 Copying file to library")
+                    if mode == .addToKanora {
+                        print("📁 Adding file to Kanora (copy and organize)")
                         progress.send(ImportProgress(
                             filesProcessed: processedFiles,
                             totalFiles: totalFiles,
@@ -265,12 +462,12 @@ class FileImportService: FileImportServiceProtocol {
                             status: .copyingFile
                         ))
 
-                        let destinationURL = try self.copyFileToLibrary(url, library: backgroundLibrary)
+                        let destinationURL = try self.copyFileToKanora(url, metadata: metadata, library: backgroundLibrary)
                         filePath = destinationURL.path
-                        print("✅ File copied to: \(filePath)")
+                        print("✅ File copied and organized: \(filePath)")
                     } else {
-                        // Leave in place - use original path
-                        print("📍 Leaving file in place: \(url.path)")
+                        // Point at directory - use original path
+                        print("📍 Keeping file in place: \(url.path)")
                         filePath = url.path
                     }
 
@@ -308,23 +505,35 @@ class FileImportService: FileImportServiceProtocol {
         progress.send(completion: .finished)
     }
 
-    private func copyFileToLibrary(_ sourceURL: URL, library: Library) throws -> URL {
-        // Use ~/Music/Kanora/music/ as the base directory
-        let musicDirectory = FileManager.default.urls(for: .musicDirectory, in: .userDomainMask).first!
-        let kanoraBaseURL = musicDirectory.appendingPathComponent("Kanora").appendingPathComponent("music")
+    private func copyFileToKanora(_ sourceURL: URL, metadata: AudioMetadata, library: Library) throws -> URL {
+        // Determine base directory - use library.path if it's a managed library, otherwise ~/Music/Kanora/
+        let baseURL: URL
+        if let libraryPath = library.path, libraryPath.contains("/Kanora/") {
+            // Library already points to Kanora directory
+            baseURL = URL(fileURLWithPath: libraryPath)
+        } else {
+            // Create new managed library path
+            let musicDirectory = FileManager.default.urls(for: .musicDirectory, in: .userDomainMask).first!
+            baseURL = musicDirectory.appendingPathComponent("Kanora").appendingPathComponent("music")
+        }
 
-        // Use library name as subdirectory if available, otherwise "default"
-        let libraryName = library.name ?? "default"
-        let libraryURL = kanoraBaseURL.appendingPathComponent(libraryName)
+        // Organize by Artist/Album
+        let artistName = (metadata.albumArtist ?? metadata.artist ?? "Unknown Artist")
+            .replacingOccurrences(of: "/", with: "-")  // Sanitize for file system
+        let albumName = (metadata.albumTitle ?? "Unknown Album")
+            .replacingOccurrences(of: "/", with: "-")
+
+        let artistURL = baseURL.appendingPathComponent(artistName)
+        let albumURL = artistURL.appendingPathComponent(albumName)
 
         let fileName = sourceURL.lastPathComponent
-        let destinationURL = libraryURL.appendingPathComponent(fileName)
+        let destinationURL = albumURL.appendingPathComponent(fileName)
 
-        print("📂 Library directory: \(libraryURL.path)")
-        print("📥 Destination: \(destinationURL.path)")
+        print("📂 Organizing to: \(artistName)/\(albumName)/\(fileName)")
+        print("📥 Full destination: \(destinationURL.path)")
 
-        // Ensure library directory exists
-        try FileManager.default.createDirectory(at: libraryURL, withIntermediateDirectories: true)
+        // Ensure album directory exists
+        try FileManager.default.createDirectory(at: albumURL, withIntermediateDirectories: true)
 
         // Copy file
         if FileManager.default.fileExists(atPath: destinationURL.path) {
@@ -353,6 +562,17 @@ class FileImportService: FileImportServiceProtocol {
         let albumTitle = metadata.albumTitle ?? String(localized: "library.unknown_album")
         let album = try findOrCreateAlbum(title: albumTitle, artist: artist, year: metadata.year, context: context)
 
+        // Save artwork if available and album doesn't have artwork yet
+        if let artworkData = metadata.artworkData, album.artworkPath == nil {
+            do {
+                let artworkPath = try saveArtwork(artworkData, for: album, library: library)
+                album.artworkPath = artworkPath
+                print("🎨 Saved artwork to: \(artworkPath)")
+            } catch {
+                print("⚠️ Failed to save artwork: \(error.localizedDescription)")
+            }
+        }
+
         // Create track
         let track = Track(
             title: metadata.title ?? URL(fileURLWithPath: filePath).deletingPathExtension().lastPathComponent,
@@ -370,6 +590,24 @@ class FileImportService: FileImportServiceProtocol {
 
         // Update album duration
         album.totalDuration += metadata.duration
+    }
+
+    private func saveArtwork(_ artworkData: Data, for album: Album, library: Library) throws -> String {
+        // Use ~/Music/Kanora/artwork/ directory
+        let musicDirectory = FileManager.default.urls(for: .musicDirectory, in: .userDomainMask).first!
+        let artworkDirectory = musicDirectory.appendingPathComponent("Kanora").appendingPathComponent("artwork")
+
+        // Create artwork directory if needed
+        try FileManager.default.createDirectory(at: artworkDirectory, withIntermediateDirectories: true)
+
+        // Generate filename from album ID
+        let filename = "\(album.id?.uuidString ?? UUID().uuidString).jpg"
+        let artworkURL = artworkDirectory.appendingPathComponent(filename)
+
+        // Write artwork data
+        try artworkData.write(to: artworkURL)
+
+        return artworkURL.path
     }
 
     private func findOrCreateArtist(

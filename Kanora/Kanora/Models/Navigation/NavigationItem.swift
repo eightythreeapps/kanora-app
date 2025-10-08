@@ -46,6 +46,7 @@ enum NavigationSection: String, CaseIterable {
     case library = "navigation.library"
     case media = "navigation.media"
     case settings = "navigation.settings"
+    case development = "navigation.development"
 }
 
 /// Navigation destinations
@@ -66,6 +67,9 @@ enum NavigationDestination: Hashable {
     // Settings
     case preferences
     case apiServer
+
+    // Development
+    case devTools
 }
 
 /// Navigation state manager
@@ -130,6 +134,14 @@ class NavigationState: ObservableObject {
                 icon: "server.rack",
                 destination: .apiServer,
                 section: .settings
+            )
+        ],
+        .development: [
+            NavigationItem(
+                title: L10n.Navigation.devTools,
+                icon: "hammer.fill",
+                destination: .devTools,
+                section: .development
             )
         ]
     ]

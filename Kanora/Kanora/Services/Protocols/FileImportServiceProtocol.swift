@@ -26,6 +26,23 @@ protocol FileImportServiceProtocol {
         mode: ImportMode
     ) -> AnyPublisher<ImportProgress, Error>
 
+    /// Scans a directory recursively for audio files
+    /// - Parameter directoryURL: Directory to scan
+    /// - Returns: Array of audio file URLs found
+    func scanDirectory(_ directoryURL: URL) -> [URL]
+
+    /// Points library at an external directory (doesn't copy files)
+    /// - Parameters:
+    ///   - directoryURL: Directory containing music
+    ///   - library: Target library
+    ///   - context: Managed object context
+    /// - Returns: Publisher emitting import progress
+    func pointAtDirectory(
+        _ directoryURL: URL,
+        library: Library,
+        in context: NSManagedObjectContext
+    ) -> AnyPublisher<ImportProgress, Error>
+
     /// Validates if a URL points to a supported audio file
     /// - Parameter url: File URL to validate
     /// - Returns: True if the file is a supported audio format
@@ -51,26 +68,41 @@ protocol FileImportServiceProtocol {
 
 // MARK: - Supporting Types
 
-/// Import mode - how files should be handled
+/// Library mode - how the library organizes music
+enum LibraryMode: String {
+    case managed      // Kanora manages files in ~/Music/Kanora/
+    case external     // Points to external directory
+}
+
+/// Import mode - how files should be handled during import
 enum ImportMode: String, CaseIterable {
-    case copyToLibrary = "copy"
-    case leaveInPlace = "inPlace"
+    case addToKanora = "addToKanora"           // Copy and organize in Kanora directory
+    case pointAtDirectory = "pointAtDirectory"  // Link to external directory (no copy)
 
     var displayName: String {
         switch self {
-        case .copyToLibrary:
-            return "Copy files to library"
-        case .leaveInPlace:
-            return "Leave files in original location"
+        case .addToKanora:
+            return "Add to Kanora"
+        case .pointAtDirectory:
+            return "Point at Directory"
         }
     }
 
     var description: String {
         switch self {
-        case .copyToLibrary:
-            return "Files will be copied to ~/Music/Kanora/music/"
-        case .leaveInPlace:
-            return "Files will remain in their current location"
+        case .addToKanora:
+            return "Copy files to Kanora and organize them by Artist/Album"
+        case .pointAtDirectory:
+            return "Keep files in their current location and scan recursively"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .addToKanora:
+            return "square.and.arrow.down"
+        case .pointAtDirectory:
+            return "folder.badge.gearshape"
         }
     }
 }
@@ -113,6 +145,7 @@ struct AudioMetadata {
     let bitrate: Int?
     let sampleRate: Int?
     let fileSize: Int64
+    let artworkData: Data?
 }
 
 /// Supported audio file formats

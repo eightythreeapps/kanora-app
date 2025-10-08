@@ -78,6 +78,10 @@ enum L10n {
         static let preferences = LocalizedStringKey("navigation.preferences")
         static let apiServer = LocalizedStringKey("navigation.api_server")
         static let about = LocalizedStringKey("navigation.about")
+
+        // Development items
+        static let development = LocalizedStringKey("navigation.development")
+        static let devTools = LocalizedStringKey("navigation.dev_tools")
     }
 
     // MARK: - Player
@@ -356,5 +360,18 @@ enum L10n {
         static let previousTrack = LocalizedStringKey("menu.previous_track")
         static let increaseVolume = LocalizedStringKey("menu.increase_volume")
         static let decreaseVolume = LocalizedStringKey("menu.decrease_volume")
+    }
+
+    // MARK: - Development
+
+    /// Development tools strings
+    enum Development {
+        static let title = LocalizedStringKey("development.title")
+        static let clearAllData = LocalizedStringKey("development.clear_all_data")
+        static let clearAllDataDescription = LocalizedStringKey("development.clear_all_data_description")
+        static let clearDataConfirm = LocalizedStringKey("development.clear_data_confirm")
+        static let clearDataWarning = LocalizedStringKey("development.clear_data_warning")
+        static let dataCleared = LocalizedStringKey("development.data_cleared")
+        static let clearDataFailed = LocalizedStringKey("development.clear_data_failed")
     }
 }

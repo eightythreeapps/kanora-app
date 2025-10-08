@@ -53,30 +53,28 @@ struct ImportFilesView: View {
                 .padding(.horizontal)
             }
 
-            // Import Mode Selector
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Import Mode")
+            // Import Mode Selector - Card-based
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Choose Import Method")
                     .font(.headline)
+                    .padding(.horizontal)
 
-                Picker("", selection: $viewModel.importMode) {
+                HStack(spacing: 16) {
                     ForEach(ImportMode.allCases, id: \.self) { mode in
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(mode.displayName)
-                                .font(.body)
-                            Text(mode.description)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        .tag(mode)
+                        ImportModeCard(
+                            mode: mode,
+                            isSelected: viewModel.importMode == mode,
+                            action: {
+                                viewModel.importMode = mode
+                                if mode == .pointAtDirectory {
+                                    viewModel.showDirectoryPicker = true
+                                }
+                            }
+                        )
                     }
                 }
-                .pickerStyle(.menu)
-
-                Text(viewModel.importMode.description)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                .padding(.horizontal)
             }
-            .padding(.horizontal)
 
             // Drop Zone or File List
             if viewModel.selectedFiles.isEmpty {
@@ -123,6 +121,71 @@ struct ImportFilesView: View {
             case .failure(let error):
                 print("❌ File picker error: \(error.localizedDescription)")
             }
+        }
+        .fileImporter(
+            isPresented: $viewModel.showDirectoryPicker,
+            allowedContentTypes: [.folder],
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case .success(let urls):
+                if let directoryURL = urls.first {
+                    print("📂 Directory selected: \(directoryURL.path)")
+                    _ = directoryURL.startAccessingSecurityScopedResource()
+                    viewModel.selectDirectory(directoryURL)
+                }
+            case .failure(let error):
+                print("❌ Directory picker error: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    // MARK: - Import Mode Card
+
+    struct ImportModeCard: View {
+        let mode: ImportMode
+        let isSelected: Bool
+        let action: () -> Void
+
+        var body: some View {
+            Button(action: action) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Image(systemName: mode.icon)
+                            .font(.title)
+                            .foregroundColor(isSelected ? .accentColor : .secondary)
+
+                        Spacer()
+
+                        if isSelected {
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.accentColor)
+                        }
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(mode.displayName)
+                            .font(.headline)
+                            .foregroundColor(.primary)
+
+                        Text(mode.description)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(isSelected ? Color.accentColor.opacity(0.1) : Color.secondary.opacity(0.1))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 2)
+                )
+            }
+            .buttonStyle(.plain)
         }
     }
 

@@ -75,15 +75,31 @@ struct NowPlayingView: View {
         let maxSize: CGFloat = isCompact ? min(geometry.size.width - 40, 250) : min(geometry.size.width * 0.5, 400)
         let artworkSize = min(maxSize, geometry.size.height * 0.4)
 
-        return RoundedRectangle(cornerRadius: 12)
-            .fill(Color.secondary.opacity(0.2))
-            .frame(width: artworkSize, height: artworkSize)
-            .shadow(radius: 20, y: 10)
-            .overlay {
-                Image(systemName: "music.note")
-                    .font(.system(size: artworkSize * 0.3))
-                    .foregroundColor(.secondary.opacity(0.5))
+        return Group {
+            if let artworkImage = viewModel.currentTrack?.album?.artworkImage {
+                #if os(macOS)
+                Image(nsImage: artworkImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                #else
+                Image(uiImage: artworkImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                #endif
+            } else {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.secondary.opacity(0.2))
+                    .overlay {
+                        Image(systemName: "music.note")
+                            .font(.system(size: artworkSize * 0.3))
+                            .foregroundColor(.secondary.opacity(0.5))
+                    }
             }
+        }
+        .frame(width: artworkSize, height: artworkSize)
+        .cornerRadius(12)
+        .clipped()
+        .shadow(radius: 20, y: 10)
     }
 
     private func trackInfo(_ track: Track) -> some View {
