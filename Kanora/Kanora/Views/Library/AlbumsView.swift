@@ -170,7 +170,7 @@ struct AlbumGridItem: View {
 
 struct AlbumDetailView: View {
     let album: Album
-    private let services = ServiceContainer.shared
+    @Environment(\.serviceContainer) private var services
 
     private var tracks: [Track] {
         guard let tracksSet = album.tracks as? Set<Track> else { return [] }
@@ -329,16 +329,7 @@ struct AlbumDetailView: View {
 
 struct TrackRowView: View {
     let track: Track
-    @StateObject private var playerViewModel: PlayerViewModel
-    private let services = ServiceContainer.shared
-
-    init(track: Track) {
-        self.track = track
-        _playerViewModel = StateObject(wrappedValue: PlayerViewModel.shared(
-            context: ServiceContainer.shared.persistence.viewContext,
-            services: ServiceContainer.shared
-        ))
-    }
+    @EnvironmentObject private var playerViewModel: PlayerViewModel
 
     private var isCurrentTrack: Bool {
         playerViewModel.currentTrack?.id == track.id

@@ -12,8 +12,8 @@ import Combine
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.serviceContainer) private var services
     @StateObject private var navigationState = NavigationState()
-    private let services = ServiceContainer.shared
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -32,7 +32,7 @@ struct ContentView: View {
 
             // Floating mini player (only show when not on Now Playing view)
             if navigationState.selectedDestination != .nowPlaying {
-                FloatingMiniPlayer(services: services)
+                FloatingMiniPlayer()
             }
         }
     }
@@ -83,7 +83,7 @@ struct ContentView: View {
         case .playlists:
             PlaylistsView()
         case .nowPlaying:
-            NowPlayingView(services: services)
+            NowPlayingView()
         case .cdRipping:
             PlaceholderView(
                 icon: "opticaldiscdrive",
@@ -156,7 +156,7 @@ struct ContentView: View {
         case .playlists:
             PlaylistsView()
         case .nowPlaying:
-            NowPlayingView(services: services)
+            NowPlayingView()
         case .cdRipping:
             PlaceholderView(
                 icon: "opticaldiscdrive",

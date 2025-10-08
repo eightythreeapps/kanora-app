@@ -33,7 +33,7 @@ struct TracksView: View {
     @State private var lastTappedTrackID: Track.ID?
     @State private var lastTapTime = Date()
 
-    private let services = ServiceContainer.shared
+    @Environment(\.serviceContainer) private var services
 
 #if os(iOS)
     @Environment(\.horizontalSizeClass) private var hSizeClass

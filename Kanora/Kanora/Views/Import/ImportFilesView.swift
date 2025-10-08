@@ -366,9 +366,15 @@ struct FileRow: View {
 // MARK: - Previews
 
 #Preview("Empty") {
-    ImportFilesView(services: ServiceContainer.preview)
+    let services = ServiceContainer.preview
+    ImportFilesView(services: services)
+        .environment(\.managedObjectContext, services.persistence.viewContext)
+        .environment(\.serviceContainer, services)
 }
 
 #Preview("With Files") {
-    ImportFilesView(services: ServiceContainer.preview)
+    let services = ServiceContainer.preview
+    ImportFilesView(services: services)
+        .environment(\.managedObjectContext, services.persistence.viewContext)
+        .environment(\.serviceContainer, services)
 }
