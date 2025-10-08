@@ -99,16 +99,16 @@ struct NowPlayingView: View {
 
     private func trackInfo(_ track: TrackViewData) -> some View {
         VStack(spacing: 8) {
-            Text(track.title)
+            Text(track.title ?? L10n.Library.unknownTrackName)
                 .font(.system(size: 32, weight: .bold))
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
 
-            Text(track.artistName)
+            Text(track.album?.artist?.name ?? L10n.Library.unknownArtistName)
                 .font(.system(size: 20, weight: .medium))
                 .foregroundColor(.secondary)
 
-            Text(track.albumTitle)
+            Text(track.album?.title ?? L10n.Library.unknownAlbumName)
                 .font(.system(size: 16))
                 .foregroundColor(.secondary)
         }
@@ -155,7 +155,7 @@ struct NowPlayingView: View {
             }
             .buttonStyle(.plain)
             .disabled(viewModel.currentTrack == nil)
-            .help(String(localized: "actions.previous"))
+            .help(L10n.Actions.previous)
 
             // Play/Pause
             Button(action: viewModel.togglePlayPause) {
@@ -164,7 +164,7 @@ struct NowPlayingView: View {
             }
             .buttonStyle(.plain)
             .disabled(viewModel.currentTrack == nil)
-            .help(viewModel.isPlaying ? String(localized: "actions.pause") : String(localized: "actions.play"))
+            .help(viewModel.isPlaying ? L10n.Actions.pause : L10n.Actions.play)
 
             // Next
             Button(action: viewModel.skipToNext) {
@@ -173,7 +173,7 @@ struct NowPlayingView: View {
             }
             .buttonStyle(.plain)
             .disabled(viewModel.currentTrack == nil)
-            .help(String(localized: "actions.next"))
+            .help(L10n.Actions.next)
         }
         .foregroundColor(.primary)
     }
@@ -189,7 +189,7 @@ struct NowPlayingView: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundColor(.secondary)
-                .help(String(localized: "player.shuffle_off"))
+                .help(L10n.Player.shuffleOff)
 
                 // Repeat
                 Button(action: {}) {
@@ -198,7 +198,7 @@ struct NowPlayingView: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundColor(.secondary)
-                .help(String(localized: "player.repeat_off"))
+                .help(L10n.Player.repeatOff)
             }
 
             Spacer()
@@ -212,7 +212,7 @@ struct NowPlayingView: View {
                 }
                 .buttonStyle(.plain)
                 .foregroundColor(.secondary)
-                .help(String(localized: "player.queue"))
+                .help(L10n.Player.queue)
 
                 // Volume
                 HStack(spacing: 12) {
@@ -263,7 +263,10 @@ struct NowPlayingView: View {
             ScrollView {
                 VStack(spacing: 0) {
                     ForEach(0..<3, id: \.self) { index in
-                        queueItem(title: "Track \(index + 1)", artist: "Artist Name")
+                        queueItem(
+                            title: L10n.Player.queuePlaceholderTitleName(index + 1),
+                            artist: L10n.Player.queuePlaceholderArtistName()
+                        )
                     }
                 }
             }

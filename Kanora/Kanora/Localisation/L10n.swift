@@ -5,6 +5,7 @@
 //  Created by Ben Reed on 07/10/2025.
 //
 
+import Foundation
 import SwiftUI
 
 /// Centralized localization keys for the Kanora app.
@@ -17,6 +18,12 @@ import SwiftUI
 /// Button(L10n.Actions.save) { ... }
 /// ```
 enum L10n {
+
+    // MARK: - Helpers
+
+    private static func localizedString(forKey key: String) -> String {
+        NSLocalizedString(key, comment: "")
+    }
 
     // MARK: - Actions
 
@@ -104,6 +111,18 @@ enum L10n {
         static let clearQueue = LocalizedStringKey("player.clear_queue")
         static let noTrackPlaying = LocalizedStringKey("player.no_track_playing")
         static let selectTrackToPlay = LocalizedStringKey("player.select_track_to_play")
+        static let queuePlaceholderArtist = LocalizedStringKey("player.queue.placeholder_artist")
+        static let queuePlaceholderTitle: (Int) -> LocalizedStringKey = { index in
+            LocalizedStringKey("player.queue.placeholder_title \(index)")
+        }
+
+        static func queuePlaceholderArtistName() -> String {
+            L10n.localizedString(forKey: "player.queue.placeholder_artist")
+        }
+
+        static func queuePlaceholderTitleName(_ index: Int) -> String {
+            String(localized: "player.queue.placeholder_title \(index)")
+        }
     }
 
     // MARK: - Library
@@ -152,10 +171,27 @@ enum L10n {
         static let noResults = LocalizedStringKey("library.search.no_results")
 
         // Common
+        static let unknownLibrary = LocalizedStringKey("library.unknown")
         static let unknownArtist = LocalizedStringKey("library.unknown_artist")
         static let unknownAlbum = LocalizedStringKey("library.unknown_album")
         static let unknownTrack = LocalizedStringKey("library.unknown_track")
         static let duration = LocalizedStringKey("library.duration")
+
+        static var unknownLibraryName: String {
+            L10n.localizedString(forKey: "library.unknown")
+        }
+
+        static var unknownArtistName: String {
+            L10n.localizedString(forKey: "library.unknown_artist")
+        }
+
+        static var unknownAlbumName: String {
+            L10n.localizedString(forKey: "library.unknown_album")
+        }
+
+        static var unknownTrackName: String {
+            L10n.localizedString(forKey: "library.unknown_track")
+        }
     }
 
     // MARK: - Forms
@@ -190,6 +226,35 @@ enum L10n {
         static let loadFailed = LocalizedStringKey("errors.load_failed")
         static let invalidFormat = LocalizedStringKey("errors.invalid_format")
         static let permissionDenied = LocalizedStringKey("errors.permission_denied")
+        static let noUserFound = LocalizedStringKey("errors.no_user_found")
+        static let noLibrarySelected = LocalizedStringKey("errors.no_library_selected")
+        static let failedToLoadLibraries = LocalizedStringKey("errors.failed_to_load_libraries")
+        static let libraryNotFound = LocalizedStringKey("errors.library_not_found")
+        static let invalidPath = LocalizedStringKey("errors.invalid_path")
+
+        static var noUserFoundMessage: String {
+            L10n.localizedString(forKey: "errors.no_user_found")
+        }
+
+        static var noLibrarySelectedMessage: String {
+            L10n.localizedString(forKey: "errors.no_library_selected")
+        }
+
+        static var failedToLoadLibrariesMessage: String {
+            L10n.localizedString(forKey: "errors.failed_to_load_libraries")
+        }
+
+        static var libraryNotFoundMessage: String {
+            L10n.localizedString(forKey: "errors.library_not_found")
+        }
+
+        static var invalidPathMessage: String {
+            L10n.localizedString(forKey: "errors.invalid_path")
+        }
+
+        static var invalidFormatMessage: String {
+            L10n.localizedString(forKey: "errors.invalid_format")
+        }
     }
 
     // MARK: - Preferences
@@ -245,6 +310,17 @@ enum L10n {
         static let selectLibrary = LocalizedStringKey("import.select_library")
         static let startImport = LocalizedStringKey("import.start_import")
         static let clearSelection = LocalizedStringKey("import.clear_selection")
+        static let chooseMethod = LocalizedStringKey("import.choose_method")
+        static let supportedFormats = LocalizedStringKey("import.supported_formats")
+        static let selectFilesPrompt = LocalizedStringKey("import.select_files_prompt")
+        static let noFilesSelected = LocalizedStringKey("import.no_files_selected")
+        static let noDirectorySelected = LocalizedStringKey("import.no_directory_selected")
+        static let libraryPointSuccess: (String) -> LocalizedStringKey = { name in
+            LocalizedStringKey("import.library_point_success \(name)")
+        }
+        static let progressFraction: (Int, Int) -> LocalizedStringKey = { processed, total in
+            LocalizedStringKey("import.progress_fraction \(processed) \(total)")
+        }
 
         // Status messages
         static let preparing = LocalizedStringKey("import.preparing")
@@ -254,6 +330,83 @@ enum L10n {
         }
         static let extractingMetadata = LocalizedStringKey("import.extracting_metadata")
         static let copyingFiles = LocalizedStringKey("import.copying_files")
+
+        enum Mode {
+            static let addToKanoraTitle = LocalizedStringKey("import.mode.add_to_kanora.title")
+            static let addToKanoraDescription = LocalizedStringKey("import.mode.add_to_kanora.description")
+            static let pointAtDirectoryTitle = LocalizedStringKey("import.mode.point_at_directory.title")
+            static let pointAtDirectoryDescription = LocalizedStringKey("import.mode.point_at_directory.description")
+
+            static func displayNameString(for mode: ImportMode) -> String {
+                switch mode {
+                case .addToKanora:
+                    return L10n.localizedString(forKey: "import.mode.add_to_kanora.title")
+                case .pointAtDirectory:
+                    return L10n.localizedString(forKey: "import.mode.point_at_directory.title")
+                }
+            }
+
+            static func descriptionString(for mode: ImportMode) -> String {
+                switch mode {
+                case .addToKanora:
+                    return L10n.localizedString(forKey: "import.mode.add_to_kanora.description")
+                case .pointAtDirectory:
+                    return L10n.localizedString(forKey: "import.mode.point_at_directory.description")
+                }
+            }
+        }
+
+        static func selectFilesPromptText() -> String {
+            L10n.localizedString(forKey: "import.select_files_prompt")
+        }
+
+        static func filesSelectedText(_ count: Int) -> String {
+            String(localized: "import.files_selected \(count)")
+        }
+
+        static func filesImportedText(_ count: Int) -> String {
+            String(localized: "import.files_imported \(count)")
+        }
+
+        static func invalidFilesSkippedText(_ count: Int) -> String {
+            String(localized: "import.invalid_files_skipped \(count)")
+        }
+
+        static func noFilesSelectedText() -> String {
+            L10n.localizedString(forKey: "import.no_files_selected")
+        }
+
+        static func noDirectorySelectedText() -> String {
+            L10n.localizedString(forKey: "import.no_directory_selected")
+        }
+
+        static func importingFileText(_ file: String) -> String {
+            String(localized: "import.importing_file \(file)")
+        }
+
+        static func importingFilesText() -> String {
+            L10n.localizedString(forKey: "import.importing_files")
+        }
+
+        static func preparingText() -> String {
+            L10n.localizedString(forKey: "import.preparing")
+        }
+
+        static func extractingMetadataText() -> String {
+            L10n.localizedString(forKey: "import.extracting_metadata")
+        }
+
+        static func copyingFilesText() -> String {
+            L10n.localizedString(forKey: "import.copying_files")
+        }
+
+        static func libraryPointSuccessText(_ name: String) -> String {
+            String(localized: "import.library_point_success \(name)")
+        }
+
+        static func progressFractionText(processed: Int, total: Int) -> String {
+            String(localized: "import.progress_fraction \(processed) \(total)")
+        }
 
         // CD Ripping
         static let cdRipping = LocalizedStringKey("import.cd_ripping")

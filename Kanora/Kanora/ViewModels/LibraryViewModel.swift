@@ -33,7 +33,7 @@ class LibraryViewModel: BaseViewModel {
     }
 
     var selectedLibraryName: String {
-        selectedLibrarySummary?.name ?? "No Library Selected"
+        selectedLibrary?.name ?? L10n.Library.unknownLibraryName
     }
 
     // MARK: - Lifecycle
@@ -86,7 +86,7 @@ class LibraryViewModel: BaseViewModel {
     /// Creates a new library
     func createLibrary(name: String, path: String) {
         guard let user = currentUser else {
-            errorMessage = "No user found"
+            errorMessage = L10n.Errors.noUserFoundMessage
             return
         }
 
@@ -243,13 +243,11 @@ enum ViewModelError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .userNotFound:
-            return "User not found"
+            return L10n.Errors.noUserFoundMessage
         case .libraryNotFound:
-            return "Library not found"
-        case .trackNotFound:
-            return "Track not found"
+            return L10n.Errors.libraryNotFoundMessage
         case .invalidPath:
-            return "Invalid file path"
+            return L10n.Errors.invalidPathMessage
         }
     }
 }

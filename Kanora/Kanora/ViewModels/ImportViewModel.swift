@@ -40,11 +40,13 @@ class ImportViewModel: BaseViewModel {
     var statusMessage: String {
         switch viewState {
         case .idle:
-            return selectedFiles.isEmpty ? "Select audio files to import" : "\(selectedFiles.count) files selected"
+            return selectedFiles.isEmpty
+                ? L10n.Import.selectFilesPromptText()
+                : L10n.Import.filesSelectedText(selectedFiles.count)
         case .loading:
             return importStatus
         case .loaded:
-            return "\(filesProcessed) files imported successfully"
+            return L10n.Import.filesImportedText(filesProcessed)
         case .error(let message):
             return message
         }
@@ -80,7 +82,7 @@ class ImportViewModel: BaseViewModel {
             }
         } catch {
             handleError(error, context: "Loading libraries")
-            viewState = .error("Failed to load libraries")
+            viewState = .error(L10n.Errors.failedToLoadLibrariesMessage)
         }
     }
 
@@ -102,7 +104,7 @@ class ImportViewModel: BaseViewModel {
 
         if validFiles.count != urls.count {
             let invalidCount = urls.count - validFiles.count
-            importErrors.append("\(invalidCount) invalid files skipped")
+            importErrors.append(L10n.Import.invalidFilesSkippedText(invalidCount))
         }
 
         logger.debug("📁 selectedFiles now contains: \(selectedFiles.count) files")
@@ -140,7 +142,7 @@ class ImportViewModel: BaseViewModel {
         guard let libraryViewData = selectedLibrary,
               let library = fetchLibrary(with: libraryViewData.id) else {
             print("❌ No library selected")
-            viewState = .error("No library selected")
+            viewState = .error(L10n.Errors.noLibrarySelectedMessage)
             return
         }
 
@@ -167,7 +169,7 @@ class ImportViewModel: BaseViewModel {
                         switch completion {
                         case .finished:
                             self.viewState = .loaded
-                            self.importStatus = "Library successfully pointed at \(directory.lastPathComponent)"
+                            self.importStatus = L10n.Import.libraryPointSuccessText(directory.lastPathComponent)
                             self.selectedFiles.removeAll()
                             self.selectedDirectory = nil
                         case .failure(let error):
@@ -263,18 +265,18 @@ class ImportViewModel: BaseViewModel {
     private func statusForProgress(_ progress: ImportProgress) -> String {
         switch progress.status {
         case .preparing:
-            return "Preparing..."
+            return L10n.Import.preparingText()
         case .importing:
             if let file = progress.currentFile {
-                return "Importing \(file)"
+                return L10n.Import.importingFileText(file)
             }
-            return "Importing files..."
+            return L10n.Import.importingFilesText()
         case .extractingMetadata:
-            return "Extracting metadata..."
+            return L10n.Import.extractingMetadataText()
         case .copyingFile:
-            return "Copying files..."
+            return L10n.Import.copyingFilesText()
         case .complete:
-            return "\(progress.filesProcessed) files imported"
+            return L10n.Import.filesImportedText(progress.filesProcessed)
         case .error(let message):
             return message
         }

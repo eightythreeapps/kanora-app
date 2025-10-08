@@ -44,10 +44,10 @@ struct ImportFilesView: View {
                         .font(theme.typography.titleSmall)
                         .foregroundColor(theme.colors.textPrimary)
 
-                    Picker("", selection: $viewModel.selectedLibraryID) {
-                        ForEach(viewModel.availableLibraries) { library in
-                            Text(library.name)
-                                .tag(library.id as Library.ID?)
+                    Picker("", selection: $viewModel.selectedLibrary) {
+                        ForEach(viewModel.availableLibraries, id: \.self) { library in
+                            Text(library.name ?? L10n.Library.unknownLibraryName)
+                                .tag(library as Library?)
                         }
                     }
                     .pickerStyle(.menu)
@@ -57,9 +57,9 @@ struct ImportFilesView: View {
             }
 
             // Import Mode Selector - Card-based
-            VStack(alignment: .leading, spacing: theme.spacing.sm) {
-                Text("Choose Import Method")
-                    .font(theme.typography.titleSmall)
+            VStack(alignment: .leading, spacing: 12) {
+                Text(L10n.Import.chooseMethod)
+                    .font(.headline)
                     .padding(.horizontal)
 
                 HStack(spacing: theme.spacing.md) {
@@ -210,9 +210,9 @@ struct ImportFilesView: View {
                 .font(theme.typography.titleSmall)
                 .foregroundColor(theme.colors.textSecondary)
 
-            Text("Supported formats: MP3, FLAC, M4A, WAV, AAC")
-                .font(theme.typography.bodySmall)
-                .foregroundColor(theme.colors.textSecondary)
+            Text(L10n.Import.supportedFormats)
+                .font(.caption)
+                .foregroundColor(.secondary)
 
             Button(action: {
                 viewModel.showFilePicker = true
@@ -245,8 +245,8 @@ struct ImportFilesView: View {
     private var fileList: some View {
         VStack(spacing: theme.spacing.xs) {
             HStack {
-                Text("\(viewModel.selectedFiles.count) files selected")
-                    .font(theme.typography.titleSmall)
+                Text(L10n.Import.filesSelected(viewModel.selectedFiles.count))
+                    .font(.headline)
                 Spacer()
                 Button(action: viewModel.clearFiles) {
                     Text(L10n.Import.clearSelection)
@@ -291,9 +291,9 @@ struct ImportFilesView: View {
                     .lineLimit(1)
             }
 
-            Text("\(viewModel.filesProcessed) / \(viewModel.totalFiles)")
-                .font(theme.typography.bodySmall)
-                .foregroundColor(theme.colors.textSecondary)
+            Text(L10n.Import.progressFraction(viewModel.filesProcessed, viewModel.totalFiles))
+                .font(.caption)
+                .foregroundColor(.secondary)
         }
         .padding(theme.spacing.md)
     }
