@@ -155,8 +155,7 @@ struct AlbumGridItem: View {
 
 struct AlbumDetailView: View {
     let album: Album
-    @Environment(\.serviceContainer) private var services
-    private let services = ServiceContainer.shared
+    @EnvironmentObject private var playerViewModel: PlayerViewModel
     private let logger = AppLogger.libraryView
 
     private var tracks: [Track] {
@@ -299,8 +298,8 @@ struct AlbumDetailView: View {
             return
         }
         logger.info("🎵 Playing album with \(tracks.count) tracks")
-        services.audioPlayerService.setQueue(tracks: tracks, startIndex: 0)
-        try? services.audioPlayerService.play(track: tracks[0])
+        let queue = makeViewData(from: tracks)
+        playerViewModel.play(tracks: queue, startIndex: 0)
     }
 
     private func playTrack(_ track: Track) {
@@ -309,8 +308,17 @@ struct AlbumDetailView: View {
             return
         }
         logger.info("🎵 Playing track at index \(index): \(track.title ?? "Unknown")")
-        services.audioPlayerService.setQueue(tracks: tracks, startIndex: index)
-        try? services.audioPlayerService.play(track: track)
+        let queue = makeViewData(from: tracks)
+        playerViewModel.play(tracks: queue, startIndex: index)
+    }
+
+    private func makeViewData(from tracks: [Track]) -> [TrackViewData] {
+        tracks.compactMap { track in
+            if track.id == nil {
+                track.id = UUID()
+            }
+            return TrackViewData(track: track)
+        }
     }
 }
 
