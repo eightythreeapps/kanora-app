@@ -133,6 +133,16 @@ extension View {
     public func themedStyle<S: ViewModifier>(_ styling: @escaping (any Theme) -> S) -> some View {
         modifier(ThemedStyleModifier(styling: styling))
     }
+
+    /// Applies the default secondary text styling from the active theme
+    public func themedSecondaryText() -> some View {
+        modifier(ThemedSecondaryTextModifier())
+    }
+
+    /// Applies a badge style that adapts to the active theme
+    public func themedBadge() -> some View {
+        modifier(ThemedBadgeModifier())
+    }
 }
 
 // MARK: - Themed Style Modifier
@@ -195,6 +205,35 @@ private struct ThemedViewWrapper<T: ThemedView>: View {
 
     var body: some View {
         themedView.themedBody(theme: theme)
+    }
+}
+
+// MARK: - Shared Theme Modifiers
+
+private struct ThemedSecondaryTextModifier: ViewModifier {
+    @ThemeAccess private var theme
+
+    func body(content: Content) -> some View {
+        content
+            .font(theme.typography.bodySmall)
+            .foregroundColor(theme.colors.textSecondary)
+    }
+}
+
+private struct ThemedBadgeModifier: ViewModifier {
+    @ThemeAccess private var theme
+
+    func body(content: Content) -> some View {
+        content
+            .font(theme.typography.labelMedium)
+            .foregroundColor(theme.colors.textSecondary)
+            .padding(.horizontal, theme.spacing.xs)
+            .padding(.vertical, theme.spacing.xxxs)
+            .background(
+                Capsule()
+                    .fill(theme.colors.surfaceSecondary.opacity(0.8))
+            )
+            .clipShape(Capsule())
     }
 }
 

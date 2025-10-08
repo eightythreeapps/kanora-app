@@ -22,27 +22,26 @@ struct ImportFilesView: View {
     var body: some View {
         VStack(spacing: theme.spacing.xl) {
             // Header
-            VStack(spacing: theme.spacing.sm) {
+            VStack(spacing: theme.spacing.xs) {
                 Image(systemName: "square.and.arrow.down")
-                    .font(theme.typography.displaySmall)
-                    .foregroundStyle(theme.colors.accent)
+                    .font(theme.typography.displayMedium)
+                    .foregroundColor(theme.colors.accent)
 
                 Text(L10n.Navigation.importFiles)
                     .font(theme.typography.titleLarge)
-                    .fontWeight(.bold)
 
                 Text(viewModel.statusMessage)
-                    .font(theme.typography.bodySmall)
-                    .foregroundStyle(theme.colors.textSecondary)
+                    .themedSecondaryText()
                     .multilineTextAlignment(.center)
             }
-            .padding(.top, theme.spacing.xxxxl)
+            .padding(.top, theme.spacing.xxxl)
 
             // Library Selector
             if !viewModel.availableLibraries.isEmpty {
-                VStack(alignment: .leading, spacing: theme.spacing.sm) {
+                VStack(alignment: .leading, spacing: theme.spacing.xs) {
                     Text(L10n.Import.selectLibrary)
                         .font(theme.typography.titleSmall)
+                        .foregroundColor(theme.colors.textPrimary)
 
                     Picker("", selection: $viewModel.selectedLibraryID) {
                         ForEach(viewModel.availableLibraries) { library in
@@ -51,6 +50,7 @@ struct ImportFilesView: View {
                         }
                     }
                     .pickerStyle(.menu)
+                    .tint(theme.colors.accent)
                 }
                 .padding(.horizontal, theme.spacing.md)
             }
@@ -59,7 +59,7 @@ struct ImportFilesView: View {
             VStack(alignment: .leading, spacing: theme.spacing.sm) {
                 Text("Choose Import Method")
                     .font(theme.typography.titleSmall)
-                    .padding(.horizontal, theme.spacing.md)
+                    .padding(.horizontal)
 
                 HStack(spacing: theme.spacing.md) {
                     ForEach(ImportMode.allCases, id: \.self) { mode in
@@ -155,45 +155,43 @@ struct ImportFilesView: View {
                 VStack(alignment: .leading, spacing: theme.spacing.sm) {
                     HStack {
                         Image(systemName: mode.icon)
-                            .font(theme.typography.titleMedium)
-                            .foregroundStyle(isSelected ? theme.colors.accent : theme.colors.textSecondary)
+                            .font(theme.typography.headlineSmall)
+                            .foregroundColor(isSelected ? theme.colors.accent : theme.colors.textSecondary)
 
                         Spacer()
 
                         if isSelected {
                             Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(theme.colors.accent)
+                                .foregroundColor(theme.colors.accent)
                         }
                     }
 
                     VStack(alignment: .leading, spacing: theme.spacing.xxxs) {
                         Text(mode.displayName)
                             .font(theme.typography.titleSmall)
-                            .foregroundStyle(theme.colors.textPrimary)
+                            .foregroundColor(theme.colors.textPrimary)
 
                         Text(mode.description)
-                            .font(theme.typography.caption)
-                            .foregroundStyle(theme.colors.textSecondary)
+                            .font(theme.typography.bodySmall)
+                            .foregroundColor(theme.colors.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 .padding(theme.spacing.md)
                 .frame(maxWidth: .infinity)
                 .background(
-                    RoundedRectangle(cornerRadius: theme.effects.radiusLG)
+                    RoundedRectangle(cornerRadius: theme.effects.radiusMD)
                         .fill(
                             isSelected
-                                ? theme.colors.accent.opacity(0.1)
-                                : theme.colors.surfaceSecondary
+                                ? theme.colors.accent.opacity(0.12)
+                                : theme.colors.surfaceSecondary.opacity(0.8)
                         )
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: theme.effects.radiusLG)
-                        .stroke(
-                            isSelected ? theme.colors.accent : Color.clear,
-                            lineWidth: 2
-                        )
+                    RoundedRectangle(cornerRadius: theme.effects.radiusMD)
+                        .stroke(isSelected ? theme.colors.accent : theme.colors.borderSecondary, lineWidth: isSelected ? 2 : 1)
                 )
+                .cornerRadius(theme.effects.radiusMD)
             }
             .buttonStyle(.plain)
         }
@@ -204,30 +202,36 @@ struct ImportFilesView: View {
     private var dropZone: some View {
         VStack(spacing: theme.spacing.md) {
             Image(systemName: "arrow.down.doc")
-                .font(theme.typography.headlineMedium)
-                .foregroundStyle(theme.colors.textSecondary)
+                .font(theme.typography.displaySmall)
+                .foregroundColor(theme.colors.textSecondary)
 
             Text(L10n.Import.dropFilesHere)
                 .font(theme.typography.titleSmall)
-                .foregroundStyle(theme.colors.textSecondary)
+                .foregroundColor(theme.colors.textSecondary)
 
             Text("Supported formats: MP3, FLAC, M4A, WAV, AAC")
-                .themedSecondaryLabel()
+                .font(theme.typography.bodySmall)
+                .foregroundColor(theme.colors.textSecondary)
 
             Button(action: {
                 viewModel.showFilePicker = true
             }) {
                 Label(L10n.Import.selectFiles, systemImage: "folder")
-                    .themedPrimaryButton()
+                    .font(theme.typography.titleSmall)
+                    .foregroundColor(theme.colors.onAccent)
+                    .padding(.horizontal, theme.spacing.xl)
+                    .padding(.vertical, theme.spacing.sm)
+                    .background(theme.colors.accent)
+                    .cornerRadius(theme.effects.radiusSM)
             }
             .buttonStyle(.plain)
         }
         .frame(maxWidth: .infinity)
         .frame(height: 300)
         .background(
-            RoundedRectangle(cornerRadius: theme.effects.radiusLG)
+            RoundedRectangle(cornerRadius: theme.effects.radiusMD)
                 .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [10]))
-                .foregroundStyle(theme.colors.borderSecondary)
+                .foregroundColor(theme.colors.borderSecondary)
         )
         .padding(.horizontal, theme.spacing.md)
         .onDrop(of: [.fileURL], isTargeted: nil) { providers in
@@ -238,7 +242,7 @@ struct ImportFilesView: View {
     // MARK: - File List
 
     private var fileList: some View {
-        VStack(spacing: theme.spacing.sm) {
+        VStack(spacing: theme.spacing.xs) {
             HStack {
                 Text("\(viewModel.selectedFiles.count) files selected")
                     .font(theme.typography.titleSmall)
@@ -246,7 +250,7 @@ struct ImportFilesView: View {
                 Button(action: viewModel.clearFiles) {
                     Text(L10n.Import.clearSelection)
                         .font(theme.typography.bodySmall)
-                        .foregroundStyle(theme.colors.accent)
+                        .foregroundColor(theme.colors.accent)
                 }
                 .buttonStyle(.plain)
                 .disabled(viewModel.viewState.isLoading)
@@ -254,7 +258,7 @@ struct ImportFilesView: View {
             .padding(.horizontal, theme.spacing.md)
 
             ScrollView {
-                LazyVStack(spacing: theme.spacing.xxxs) {
+                LazyVStack(spacing: theme.spacing.xxs) {
                     ForEach(Array(viewModel.selectedFiles.enumerated()), id: \.element) { index, url in
                         FileRow(
                             url: url,
@@ -274,18 +278,21 @@ struct ImportFilesView: View {
     // MARK: - Progress View
 
     private var progressView: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: theme.spacing.xs) {
             ProgressView(value: viewModel.importProgress)
                 .progressViewStyle(.linear)
+                .tint(theme.colors.accent)
 
             if let currentFile = viewModel.currentFile {
                 Text(currentFile)
-                    .themedSecondaryLabel()
+                    .font(theme.typography.bodySmall)
+                    .foregroundColor(theme.colors.textSecondary)
                     .lineLimit(1)
             }
 
             Text("\(viewModel.filesProcessed) / \(viewModel.totalFiles)")
-                .themedSecondaryLabel()
+                .font(theme.typography.bodySmall)
+                .foregroundColor(theme.colors.textSecondary)
         }
         .padding(theme.spacing.md)
     }
@@ -299,7 +306,12 @@ struct ImportFilesView: View {
                     viewModel.showFilePicker = true
                 }) {
                     Label(L10n.Actions.add, systemImage: "plus")
-                        .themedTintedButton()
+                        .font(theme.typography.titleSmall)
+                        .foregroundColor(theme.colors.accent)
+                        .padding(.horizontal, theme.spacing.xl)
+                        .padding(.vertical, theme.spacing.sm)
+                        .background(theme.colors.accent.opacity(0.12))
+                        .cornerRadius(theme.effects.radiusSM)
                 }
                 .buttonStyle(.plain)
             }
@@ -307,7 +319,12 @@ struct ImportFilesView: View {
             if viewModel.canImport {
                 Button(action: viewModel.startImport) {
                     Label(L10n.Import.startImport, systemImage: "square.and.arrow.down")
-                        .themedPrimaryButton()
+                        .font(theme.typography.titleSmall)
+                        .foregroundColor(theme.colors.onAccent)
+                        .padding(.horizontal, theme.spacing.xxl)
+                        .padding(.vertical, theme.spacing.sm)
+                        .background(theme.colors.accent)
+                        .cornerRadius(theme.effects.radiusSM)
                 }
                 .buttonStyle(.plain)
                 .disabled(viewModel.viewState.isLoading)
@@ -329,7 +346,7 @@ struct FileRow: View {
     var body: some View {
         HStack(spacing: theme.spacing.sm) {
             Image(systemName: "music.note")
-                .foregroundStyle(theme.colors.textSecondary)
+                .foregroundColor(theme.colors.textSecondary)
 
             VStack(alignment: .leading, spacing: theme.spacing.xxxs) {
                 Text(url.lastPathComponent)
@@ -337,24 +354,22 @@ struct FileRow: View {
                     .lineLimit(1)
 
                 Text(url.pathExtension.uppercased())
-                    .themedSecondaryLabel()
+                    .themedBadge()
             }
 
             Spacer()
 
             Button(action: onRemove) {
                 Image(systemName: "xmark.circle.fill")
-                    .foregroundStyle(theme.colors.textSecondary)
+                    .foregroundColor(theme.colors.textSecondary)
             }
             .buttonStyle(.plain)
             .disabled(!isEnabled)
         }
         .padding(.vertical, theme.spacing.xs)
-        .padding(.horizontal, theme.spacing.md)
-        .background(
-            RoundedRectangle(cornerRadius: theme.effects.radiusMD)
-                .fill(theme.colors.surfaceSecondary)
-        )
+        .padding(.horizontal, theme.spacing.sm)
+        .background(theme.colors.surfaceSecondary.opacity(isEnabled ? 0.9 : 0.5))
+        .cornerRadius(theme.effects.radiusSM)
     }
 }
 

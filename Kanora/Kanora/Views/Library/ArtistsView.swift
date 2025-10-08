@@ -132,7 +132,7 @@ struct ArtistGridItem: View {
                     .frame(minHeight: 44, maxHeight: 44, alignment: .top)
                     .foregroundStyle(theme.colors.textPrimary)
 
-                HStack(spacing: 4) {
+                HStack(spacing: theme.spacing.xxs) {
                     Text(L10n.Library.albumCount(artist.albumCount))
                         .themedSecondaryLabel()
                     Text("•")
@@ -272,6 +272,7 @@ struct ArtistDetailView: View {
         PreviewFactory.makeArtistsView(state: .populated)
     }
     .environmentObject(navigationState)
+    .designSystem()
 }
 
 #Preview("Artists - Empty") {
@@ -280,6 +281,7 @@ struct ArtistDetailView: View {
         PreviewFactory.makeArtistsView(state: .empty)
     }
     .environmentObject(navigationState)
+    .designSystem()
 }
 
 #Preview("Artist Detail") {
@@ -288,4 +290,5 @@ struct ArtistDetailView: View {
         PreviewFactory.makeArtistDetailView(state: .populated)
     }
     .environmentObject(navigationState)
+    .designSystem()
 }
