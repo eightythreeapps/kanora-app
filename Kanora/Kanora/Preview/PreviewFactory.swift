@@ -225,7 +225,7 @@ struct PreviewFactory {
         do {
             try context.save()
         } catch {
-            print("❌ Failed to save preview context: \(error)")
+            AppLogger.preview.error("❌ Failed to save preview context: \(error)")
         }
     }
 }
