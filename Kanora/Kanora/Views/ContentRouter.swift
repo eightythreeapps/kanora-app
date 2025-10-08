@@ -38,7 +38,7 @@ struct ContentRouter: View {
                 case .playlists:
                     PlaylistsView()
                 case .nowPlaying:
-                    NowPlayingView(services: services)
+                    NowPlayingView()
                 case .cdRipping:
                     PlaceholderView(
                         icon: "opticaldiscdrive",
@@ -106,18 +106,30 @@ struct PlaceholderView: View {
     let persistence = PersistenceController.preview
     let services = ServiceContainer(persistence: persistence)
     let navigationState = NavigationState()
+    let playerViewModel = PlayerViewModel(
+        context: services.persistence.viewContext,
+        services: services
+    )
     return NavigationView {
         ContentRouter(destination: .artists, services: services, navigationState: navigationState)
     }
+    .environment(\.managedObjectContext, services.persistence.viewContext)
     .environmentObject(navigationState)
+    .environmentObject(playerViewModel)
 }
 
 #Preview("Placeholder") {
     let persistence = PersistenceController.preview
     let services = ServiceContainer(persistence: persistence)
     let navigationState = NavigationState()
+    let playerViewModel = PlayerViewModel(
+        context: services.persistence.viewContext,
+        services: services
+    )
     return NavigationView {
         ContentRouter(destination: .cdRipping, services: services, navigationState: navigationState)
     }
+    .environment(\.managedObjectContext, services.persistence.viewContext)
     .environmentObject(navigationState)
+    .environmentObject(playerViewModel)
 }

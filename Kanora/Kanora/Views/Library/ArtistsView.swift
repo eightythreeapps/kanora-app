@@ -47,41 +47,28 @@ struct ArtistsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Search bar
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(theme.colors.textSecondary)
-                TextField(L10n.Library.searchArtists, text: $searchText)
-                    .textFieldStyle(.plain)
-                if !searchText.isEmpty {
-                    Button(action: { searchText = "" }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(theme.colors.textSecondary)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(theme.spacing.xs)
-            .background(
-                RoundedRectangle(cornerRadius: theme.effects.radiusSM)
-                    .fill(theme.colors.surfaceSecondary.opacity(0.9))
+            LibrarySearchBar(
+                placeholder: L10n.Library.searchArtists,
+                text: $searchText,
+                accessibilityLabel: L10n.Library.searchArtists,
+                textFieldIdentifier: "artists-search-field",
+                clearButtonIdentifier: "artists-search-clear"
             )
-            .padding()
 
             // Artists grid
             if filteredArtists.isEmpty {
                 Spacer()
                 VStack(spacing: theme.spacing.sm) {
                     Image(systemName: "music.mic")
-                        .font(theme.typography.displaySmall)
-                        .foregroundColor(theme.colors.textSecondary)
+                        .font(theme.typography.headlineMedium)
+                        .foregroundStyle(theme.colors.textSecondary)
                     Text(searchText.isEmpty ? L10n.Library.artistsEmpty : L10n.Library.noResults)
                         .font(theme.typography.titleSmall)
-                        .foregroundColor(theme.colors.textSecondary)
+                        .foregroundStyle(theme.colors.textSecondary)
                     if searchText.isEmpty {
                         Text(L10n.Library.artistsEmptyMessage)
                             .font(theme.typography.bodySmall)
-                            .foregroundColor(theme.colors.textSecondary)
+                            .foregroundStyle(theme.colors.textSecondary)
                             .multilineTextAlignment(.center)
                     }
                 }
@@ -105,8 +92,8 @@ struct ArtistsView: View {
                             }
                         }
                     }
-                    .padding()
-                    .padding(.bottom, theme.spacing.xxxl)
+                    .padding(theme.spacing.md)
+                    .padding(.bottom, theme.spacing.xxxxl * 2)
                 }
             }
         }
@@ -115,7 +102,7 @@ struct ArtistsView: View {
             ToolbarItem(placement: .primaryAction) {
                 Text(L10n.Library.artistCount(filteredArtists.count))
                     .font(theme.typography.bodySmall)
-                    .foregroundColor(theme.colors.textSecondary)
+                    .foregroundStyle(theme.colors.textSecondary)
             }
         }
     }
@@ -126,32 +113,32 @@ struct ArtistGridItem: View {
     @ThemeAccess private var theme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: theme.spacing.sm) {
+        VStack(alignment: .leading, spacing: theme.spacing.xs) {
             // Artist image placeholder
             Circle()
-                .fill(theme.colors.textSecondary.opacity(0.15))
+                .fill(theme.colors.surfaceSecondary)
                 .overlay {
                     Image(systemName: "music.mic")
-                        .font(theme.typography.headlineMedium)
-                        .foregroundColor(theme.colors.textSecondary)
+                        .font(theme.typography.headlineSmall)
+                        .foregroundStyle(theme.colors.textSecondary)
                 }
                 .aspectRatio(1, contentMode: .fit)
                 .clipped()
 
-            VStack(alignment: .leading, spacing: theme.spacing.xs) {
+            VStack(alignment: .leading, spacing: theme.spacing.xxxs) {
                 Text(artist.name ?? String(localized: "library.unknown_artist"))
                     .font(theme.typography.titleSmall)
                     .lineLimit(2)
                     .frame(minHeight: 44, maxHeight: 44, alignment: .top)
-                    .foregroundColor(theme.colors.textPrimary)
+                    .foregroundStyle(theme.colors.textPrimary)
 
                 HStack(spacing: theme.spacing.xxs) {
                     Text(L10n.Library.albumCount(artist.albumCount))
-                        .themedBadge()
+                        .themedSecondaryLabel()
                     Text("•")
-                        .themedSecondaryText()
+                        .foregroundStyle(theme.colors.textSecondary)
                     Text(L10n.Library.trackCount(artist.trackCount))
-                        .themedBadge()
+                        .themedSecondaryLabel()
                 }
             }
         }
@@ -187,39 +174,42 @@ struct ArtistDetailView: View {
         ScrollView {
             VStack(spacing: 0) {
                 // Artist header
-                HStack(alignment: .top, spacing: theme.spacing.xxl) {
+                HStack(alignment: .top, spacing: theme.spacing.xl) {
                     // Large artist image placeholder
                     Circle()
-                        .fill(theme.colors.textSecondary.opacity(0.15))
+                        .fill(theme.colors.surfaceSecondary)
                         .frame(width: 200, height: 200)
                         .overlay {
                             Image(systemName: "music.mic")
-                                .font(theme.typography.headlineLarge)
-                                .foregroundColor(theme.colors.textSecondary)
+                                .font(theme.typography.displaySmall)
+                                .foregroundStyle(theme.colors.textSecondary)
                         }
 
                     VStack(alignment: .leading, spacing: theme.spacing.lg) {
-                        VStack(alignment: .leading, spacing: theme.spacing.xs) {
+                        VStack(alignment: .leading, spacing: theme.spacing.sm) {
                             Text(artist.name ?? String(localized: "library.unknown_artist"))
                                 .font(theme.typography.headlineLarge)
+                                .fontWeight(.bold)
 
                             HStack(spacing: theme.spacing.md) {
                                 Label(L10n.Library.albumCount(albums.count), systemImage: "square.stack")
-                                    .themedBadge()
+                                    .font(theme.typography.bodySmall)
+                                    .foregroundStyle(theme.colors.textSecondary)
 
                                 Label(L10n.Library.trackCount(artist.trackCount), systemImage: "music.note")
-                                    .themedBadge()
+                                    .font(theme.typography.bodySmall)
+                                    .foregroundStyle(theme.colors.textSecondary)
                             }
                         }
 
                         // Bio placeholder
-                        VStack(alignment: .leading, spacing: theme.spacing.xs) {
+                        VStack(alignment: .leading, spacing: theme.spacing.sm) {
                             Text("Biography")
                                 .font(theme.typography.titleSmall)
 
                             Text("Artist biography will be displayed here. This could include information about the artist's background, musical style, and career highlights.")
                                 .font(theme.typography.bodyMedium)
-                                .foregroundColor(theme.colors.textSecondary)
+                                .foregroundStyle(theme.colors.textSecondary)
                                 .lineLimit(4)
                         }
                     }
@@ -227,7 +217,6 @@ struct ArtistDetailView: View {
                     Spacer()
                 }
                 .padding(theme.spacing.xl)
-                .background(theme.colors.surfaceSecondary.opacity(0.6))
 
                 Divider()
 
@@ -235,17 +224,18 @@ struct ArtistDetailView: View {
                 if albums.isEmpty {
                     VStack(spacing: theme.spacing.sm) {
                         Image(systemName: "square.stack")
-                            .font(theme.typography.displaySmall)
-                            .foregroundColor(theme.colors.textSecondary)
+                            .font(theme.typography.headlineMedium)
+                            .foregroundStyle(theme.colors.textSecondary)
                         Text(L10n.Library.albumsEmpty)
                             .font(theme.typography.titleSmall)
-                            .foregroundColor(theme.colors.textSecondary)
+                            .foregroundStyle(theme.colors.textSecondary)
                     }
-                    .padding(.vertical, theme.spacing.xxxl)
+                    .padding(.vertical, theme.spacing.xxxxl + theme.spacing.lg)
                 } else {
-                    VStack(alignment: .leading, spacing: theme.spacing.sm) {
+                    VStack(alignment: .leading, spacing: theme.spacing.xs) {
                         Text("Albums")
-                            .font(theme.typography.titleLarge)
+                            .font(theme.typography.titleMedium)
+                            .fontWeight(.bold)
                             .padding(.horizontal, theme.spacing.xl)
                             .padding(.top, theme.spacing.xl)
 
@@ -267,7 +257,7 @@ struct ArtistDetailView: View {
                             }
                         }
                         .padding(.horizontal, theme.spacing.xl)
-                        .padding(.bottom, theme.spacing.xxxl)
+                        .padding(.bottom, theme.spacing.xxxxl * 2)
                     }
                 }
             }

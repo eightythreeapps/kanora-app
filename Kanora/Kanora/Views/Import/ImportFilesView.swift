@@ -43,16 +43,16 @@ struct ImportFilesView: View {
                         .font(theme.typography.titleSmall)
                         .foregroundColor(theme.colors.textPrimary)
 
-                    Picker("", selection: $viewModel.selectedLibrary) {
-                        ForEach(viewModel.availableLibraries, id: \.self) { library in
-                            Text(library.name ?? String(localized: "library.unknown"))
-                                .tag(library as Library?)
+                    Picker("", selection: $viewModel.selectedLibraryID) {
+                        ForEach(viewModel.availableLibraries) { library in
+                            Text(library.name)
+                                .tag(library.id as Library.ID?)
                         }
                     }
                     .pickerStyle(.menu)
                     .tint(theme.colors.accent)
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, theme.spacing.md)
             }
 
             // Import Mode Selector - Card-based
@@ -75,7 +75,7 @@ struct ImportFilesView: View {
                         )
                     }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, theme.spacing.md)
             }
 
             // Drop Zone or File List
@@ -95,7 +95,7 @@ struct ImportFilesView: View {
             // Actions
             actionButtons
         }
-        .padding(.bottom, 100) // Space for floating player
+        .padding(.bottom, theme.spacing.xxxxl * 2) // Space for floating player
         .onAppear { viewModel.onAppear() }
         .onDisappear { viewModel.onDisappear() }
         .fileImporter(
@@ -166,7 +166,7 @@ struct ImportFilesView: View {
                         }
                     }
 
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: theme.spacing.xxxs) {
                         Text(mode.displayName)
                             .font(theme.typography.titleSmall)
                             .foregroundColor(theme.colors.textPrimary)
@@ -233,7 +233,7 @@ struct ImportFilesView: View {
                 .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [10]))
                 .foregroundColor(theme.colors.borderSecondary)
         )
-        .padding(.horizontal)
+        .padding(.horizontal, theme.spacing.md)
         .onDrop(of: [.fileURL], isTargeted: nil) { providers in
             viewModel.handleDrop(providers: providers)
         }
@@ -255,7 +255,7 @@ struct ImportFilesView: View {
                 .buttonStyle(.plain)
                 .disabled(viewModel.viewState.isLoading)
             }
-            .padding(.horizontal)
+            .padding(.horizontal, theme.spacing.md)
 
             ScrollView {
                 LazyVStack(spacing: theme.spacing.xxs) {
@@ -269,7 +269,7 @@ struct ImportFilesView: View {
                         )
                     }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, theme.spacing.md)
             }
             .frame(maxHeight: 400)
         }
@@ -330,8 +330,8 @@ struct ImportFilesView: View {
                 .disabled(viewModel.viewState.isLoading)
             }
         }
-        .padding(.horizontal)
-        .padding(.bottom, 24)
+        .padding(.horizontal, theme.spacing.md)
+        .padding(.bottom, theme.spacing.xl)
     }
 }
 
