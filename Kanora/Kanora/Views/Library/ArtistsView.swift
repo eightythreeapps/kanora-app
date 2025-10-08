@@ -17,6 +17,7 @@ import UIKit
 struct ArtistsView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject private var navigationState: NavigationState
+    @ThemeAccess private var theme
 
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Artist.sortName, ascending: true)],
@@ -35,56 +36,63 @@ struct ArtistsView: View {
         }
     }
 
-    let columns = [
-        GridItem(.adaptive(minimum: 150, maximum: 200), spacing: 16)
-    ]
+    private var columns: [GridItem] {
+        [
+            GridItem(
+                .adaptive(minimum: 150, maximum: 200),
+                spacing: theme.spacing.md
+            )
+        ]
+    }
 
     var body: some View {
         VStack(spacing: 0) {
             // Search bar
             HStack {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(theme.colors.textSecondary)
+
                 TextField(L10n.Library.searchArtists, text: $searchText)
                     .textFieldStyle(.plain)
+                    .font(theme.typography.bodyMedium)
+
                 if !searchText.isEmpty {
                     Button(action: { searchText = "" }) {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(theme.colors.textSecondary)
                     }
                     .buttonStyle(.plain)
                 }
             }
-            .padding(8)
-#if os(macOS)
-            .background(Color(nsColor: .textBackgroundColor).opacity(0.5))
-#else
-            .background(Color(uiColor: .secondarySystemBackground).opacity(0.5))
-#endif
-            .cornerRadius(8)
-            .padding()
+            .padding(theme.spacing.xs)
+            .background(
+                RoundedRectangle(cornerRadius: theme.effects.radiusMD)
+                    .fill(theme.colors.surfaceSecondary.opacity(0.8))
+            )
+            .padding(.horizontal, theme.spacing.md)
+            .padding(.top, theme.spacing.md)
 
             // Artists grid
             if filteredArtists.isEmpty {
                 Spacer()
-                VStack(spacing: 12) {
+                VStack(spacing: theme.spacing.sm) {
                     Image(systemName: "music.mic")
-                        .font(.system(size: 48))
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.headlineMedium)
+                        .foregroundStyle(theme.colors.textSecondary)
                     Text(searchText.isEmpty ? L10n.Library.artistsEmpty : L10n.Library.noResults)
-                        .font(.headline)
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.titleSmall)
+                        .foregroundStyle(theme.colors.textSecondary)
                     if searchText.isEmpty {
                         Text(L10n.Library.artistsEmptyMessage)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .font(theme.typography.bodySmall)
+                            .foregroundStyle(theme.colors.textSecondary)
                             .multilineTextAlignment(.center)
                     }
                 }
                 Spacer()
             } else {
                 ScrollView {
-                    LazyVGrid(columns: columns, spacing: 16) {
+                    LazyVGrid(columns: columns, spacing: theme.spacing.md) {
                         ForEach(filteredArtists) { artist in
                             if #available(iOS 16.0, macOS 13.0, *) {
                                 NavigationLink(value: artist) {
@@ -101,8 +109,8 @@ struct ArtistsView: View {
                             }
                         }
                     }
-                    .padding()
-                    .padding(.bottom, 100)
+                    .padding(theme.spacing.md)
+                    .padding(.bottom, theme.spacing.xxxxl * 2)
                 }
             }
         }
@@ -110,8 +118,8 @@ struct ArtistsView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Text(L10n.Library.artistCount(filteredArtists.count))
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .font(theme.typography.bodySmall)
+                    .foregroundStyle(theme.colors.textSecondary)
             }
         }
     }
@@ -119,36 +127,35 @@ struct ArtistsView: View {
 
 struct ArtistGridItem: View {
     let artist: Artist
+    @ThemeAccess private var theme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: theme.spacing.xs) {
             // Artist image placeholder
             Circle()
-                .fill(Color.secondary.opacity(0.2))
+                .fill(theme.colors.surfaceSecondary)
                 .overlay {
                     Image(systemName: "music.mic")
-                        .font(.system(size: 40))
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.headlineSmall)
+                        .foregroundStyle(theme.colors.textSecondary)
                 }
                 .aspectRatio(1, contentMode: .fit)
                 .clipped()
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: theme.spacing.xxxs) {
                 Text(artist.name ?? String(localized: "library.unknown_artist"))
-                    .font(.headline)
+                    .font(theme.typography.titleSmall)
                     .lineLimit(2)
                     .frame(minHeight: 44, maxHeight: 44, alignment: .top)
-                    .foregroundColor(.primary)
+                    .foregroundStyle(theme.colors.textPrimary)
 
                 HStack(spacing: 4) {
                     Text(L10n.Library.albumCount(artist.albumCount))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .themedSecondaryLabel()
                     Text("•")
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(theme.colors.textSecondary)
                     Text(L10n.Library.trackCount(artist.trackCount))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .themedSecondaryLabel()
                 }
             }
         }
@@ -158,6 +165,7 @@ struct ArtistGridItem: View {
 struct ArtistDetailView: View {
     let artist: Artist
     @EnvironmentObject private var navigationState: NavigationState
+    @ThemeAccess private var theme
 
     private var albums: [Album] {
         guard let albumsSet = artist.albums as? Set<Album> else { return [] }
@@ -170,78 +178,85 @@ struct ArtistDetailView: View {
         }
     }
 
-    let columns = [
-        GridItem(.adaptive(minimum: 150, maximum: 200), spacing: 16)
-    ]
+    private var columns: [GridItem] {
+        [
+            GridItem(
+                .adaptive(minimum: 150, maximum: 200),
+                spacing: theme.spacing.md
+            )
+        ]
+    }
 
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
                 // Artist header
-                HStack(alignment: .top, spacing: 24) {
+                HStack(alignment: .top, spacing: theme.spacing.xl) {
                     // Large artist image placeholder
                     Circle()
-                        .fill(Color.secondary.opacity(0.2))
+                        .fill(theme.colors.surfaceSecondary)
                         .frame(width: 200, height: 200)
                         .overlay {
                             Image(systemName: "music.mic")
-                                .font(.system(size: 80))
-                                .foregroundColor(.secondary)
+                                .font(theme.typography.displaySmall)
+                                .foregroundStyle(theme.colors.textSecondary)
                         }
 
-                    VStack(alignment: .leading, spacing: 16) {
-                        VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: theme.spacing.lg) {
+                        VStack(alignment: .leading, spacing: theme.spacing.sm) {
                             Text(artist.name ?? String(localized: "library.unknown_artist"))
-                                .font(.largeTitle.bold())
+                                .font(theme.typography.headlineLarge)
+                                .fontWeight(.bold)
 
-                            HStack(spacing: 16) {
+                            HStack(spacing: theme.spacing.md) {
                                 Label(L10n.Library.albumCount(albums.count), systemImage: "square.stack")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                    .font(theme.typography.bodySmall)
+                                    .foregroundStyle(theme.colors.textSecondary)
 
                                 Label(L10n.Library.trackCount(artist.trackCount), systemImage: "music.note")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                    .font(theme.typography.bodySmall)
+                                    .foregroundStyle(theme.colors.textSecondary)
                             }
                         }
 
                         // Bio placeholder
-                        VStack(alignment: .leading, spacing: 8) {
+                        VStack(alignment: .leading, spacing: theme.spacing.sm) {
                             Text("Biography")
-                                .font(.headline)
+                                .font(theme.typography.titleSmall)
 
                             Text("Artist biography will be displayed here. This could include information about the artist's background, musical style, and career highlights.")
-                                .font(.body)
-                                .foregroundColor(.secondary)
+                                .font(theme.typography.bodyMedium)
+                                .foregroundStyle(theme.colors.textSecondary)
                                 .lineLimit(4)
                         }
                     }
 
                     Spacer()
                 }
-                .padding(24)
+                .padding(theme.spacing.xl)
 
                 Divider()
 
                 // Albums grid
                 if albums.isEmpty {
-                    VStack(spacing: 12) {
+                    VStack(spacing: theme.spacing.sm) {
                         Image(systemName: "square.stack")
-                            .font(.system(size: 48))
-                            .foregroundColor(.secondary)
+                            .font(theme.typography.headlineMedium)
+                            .foregroundStyle(theme.colors.textSecondary)
                         Text(L10n.Library.albumsEmpty)
-                            .font(.headline)
-                            .foregroundColor(.secondary)
+                            .font(theme.typography.titleSmall)
+                            .foregroundStyle(theme.colors.textSecondary)
                     }
-                    .padding(.vertical, 60)
+                    .padding(.vertical, theme.spacing.xxxxl + theme.spacing.lg)
                 } else {
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: theme.spacing.xs) {
                         Text("Albums")
-                            .font(.title2.bold())
-                            .padding(.horizontal, 24)
-                            .padding(.top, 24)
+                            .font(theme.typography.titleMedium)
+                            .fontWeight(.bold)
+                            .padding(.horizontal, theme.spacing.xl)
+                            .padding(.top, theme.spacing.xl)
 
-                        LazyVGrid(columns: columns, spacing: 16) {
+                        LazyVGrid(columns: columns, spacing: theme.spacing.md) {
                             ForEach(albums) { album in
                                 if #available(iOS 16.0, macOS 13.0, *) {
                                     NavigationLink(value: album) {
@@ -258,8 +273,8 @@ struct ArtistDetailView: View {
                                 }
                             }
                         }
-                        .padding(.horizontal, 24)
-                        .padding(.bottom, 100)
+                        .padding(.horizontal, theme.spacing.xl)
+                        .padding(.bottom, theme.spacing.xxxxl * 2)
                     }
                 }
             }
