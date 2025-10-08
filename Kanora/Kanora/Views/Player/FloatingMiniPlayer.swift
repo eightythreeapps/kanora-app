@@ -8,6 +8,8 @@
 import SwiftUI
 #if os(macOS)
 import AppKit
+#else
+import UIKit
 #endif
 
 struct FloatingMiniPlayer: View {
@@ -252,7 +254,44 @@ struct FloatingMiniPlayer: View {
     }
 }
 
+#if os(macOS)
+fileprivate func artworkImage(for track: TrackViewData?) -> NSImage? {
+    guard let path = track?.albumArtworkPath else { return nil }
+    return NSImage(contentsOfFile: path)
+}
+#else
+fileprivate func artworkImage(for track: TrackViewData?) -> UIImage? {
+    guard let path = track?.albumArtworkPath else { return nil }
+    return UIImage(contentsOfFile: path)
+}
+#endif
+
 #Preview("Populated - Compact") {
+    let services = ServiceContainer.preview
+    let playerViewModel = PlayerViewModel(
+        context: services.persistence.viewContext,
+        services: services
+    )
+
+    return FloatingMiniPlayer()
+        .environment(\.horizontalSizeClass, .compact)
+        .environment(\.managedObjectContext, services.persistence.viewContext)
+        .environment(\.serviceContainer, services)
+        .environmentObject(playerViewModel)
+}
+
+#Preview("Populated - Regular") {
+    let services = ServiceContainer.preview
+    let playerViewModel = PlayerViewModel(
+        context: services.persistence.viewContext,
+        services: services
+    )
+
+    return FloatingMiniPlayer()
+        .environment(\.horizontalSizeClass, .regular)
+        .environment(\.managedObjectContext, services.persistence.viewContext)
+        .environment(\.serviceContainer, services)
+        .environmentObject(playerViewModel)
     let dependencies = PreviewFactory.makePreviewDependencies()
     return FloatingMiniPlayer()
         .environment(\.managedObjectContext, dependencies.services.persistence.viewContext)

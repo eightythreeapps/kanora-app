@@ -72,6 +72,11 @@ struct PreviewFactory {
             context: context
         )
 
+        let playerViewModel = PlayerViewModel(
+            context: context,
+            services: services
+        )
+
         return ArtistDetailView(artist: artist)
             .environment(\.managedObjectContext, context)
             .environmentObject(playerViewModel)
@@ -106,6 +111,11 @@ struct PreviewFactory {
             ),
             year: 2024,
             context: context
+        )
+
+        let playerViewModel = PlayerViewModel(
+            context: context,
+            services: services
         )
 
         return AlbumDetailView(album: album)
@@ -225,7 +235,7 @@ struct PreviewFactory {
         do {
             try context.save()
         } catch {
-            print("❌ Failed to save preview context: \(error)")
+            AppLogger.preview.error("❌ Failed to save preview context: \(error)")
         }
     }
 }

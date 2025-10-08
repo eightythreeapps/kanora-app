@@ -9,18 +9,45 @@ import Foundation
 import CoreData
 import Combine
 
+struct TrackViewData: Identifiable, Equatable {
+    let id: Track.ID
+    let title: String
+    let artistName: String
+    let albumTitle: String
+    let albumArtistName: String
+    let albumArtworkPath: String?
+    let duration: TimeInterval
+
+    init(track: Track) {
+        let identifier = track.id ?? UUID()
+        if track.id == nil {
+            track.id = identifier
+        }
+
+        self.id = identifier
+        self.title = track.title ?? ""
+        self.artistName = track.artistName
+        self.albumTitle = track.album?.title ?? ""
+        self.albumArtistName = track.album?.artist?.name ?? ""
+        self.albumArtworkPath = track.album?.artworkPath
+        self.duration = track.duration
+    }
+}
+
 /// ViewModel for managing playback state and controls
 @MainActor
 class PlayerViewModel: BaseViewModel {
     // MARK: - Published Properties
 
-    @Published private(set) var currentTrack: TrackViewData?
+    @Published var currentTrack: TrackViewData?
     @Published var currentTrackID: Track.ID?
     @Published var currentTime: TimeInterval = 0
     @Published var duration: TimeInterval = 0
     @Published var volume: Float = 0.7
     @Published var isMuted: Bool = false
     @Published var isPlaying: Bool = false
+
+    private let logger = AppLogger.playerViewModel
 
     // MARK: - Computed Properties
 
@@ -63,8 +90,7 @@ class PlayerViewModel: BaseViewModel {
 
     func stop() {
         services.audioPlayerService.stop()
-        currentTrack = nil
-        currentTrackID = nil
+        updateCurrentTrack(with: nil)
         currentTime = 0
         duration = 0
         isPlaying = false
@@ -92,11 +118,7 @@ class PlayerViewModel: BaseViewModel {
     func playTrack(_ track: Track) {
         do {
             try services.audioPlayerService.play(track: track)
-            if let summary = TrackViewData(track: track) {
-                trackCache[summary.id] = track
-                currentTrackID = summary.id
-                currentTrack = summary
-            }
+            updateCurrentTrack(with: track)
         } catch {
             handleError(error, context: "Playing track")
         }
@@ -107,23 +129,20 @@ class PlayerViewModel: BaseViewModel {
     private var trackCache: [Track.ID: Track] = [:]
 
     private func subscribeToPlayerState() {
-        print("🔗 PlayerViewModel subscribing to player state")
+        logger.debug("🔗 PlayerViewModel subscribing to player state")
 
         // Subscribe to playback state changes
         services.audioPlayerService.statePublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
-                print("🎵 Playback state changed: \(state)")
+                logger.info("🎵 Playback state changed: \(state)")
                 self?.isPlaying = state.isPlaying
 
                 // Update current track from service
-                if let currentTrack = self?.services.audioPlayerService.currentTrack,
-                   let summary = TrackViewData(track: currentTrack) {
-                    print("📀 Current track: \(summary.title)")
-                    self?.trackCache[summary.id] = currentTrack
-                    self?.currentTrackID = summary.id
-                    self?.currentTrack = summary
-                    self?.duration = summary.duration
+                if let currentTrack = self?.services.audioPlayerService.currentTrack {
+                    logger.debug("📀 Current track: \(currentTrack.title ?? "Unknown")")
+                    self?.currentTrack = currentTrack
+                    self?.duration = currentTrack.duration
                 } else if state == .idle || state == .stopped {
                     self?.currentTrack = nil
                     self?.currentTrackID = nil
@@ -144,7 +163,7 @@ class PlayerViewModel: BaseViewModel {
         $currentTrack
             .compactMap { $0 }
             .sink { [weak self] track in
-                print("📊 Track changed in ViewModel: \(track.title)")
+                logger.info("📊 Track changed in ViewModel: \(track.title ?? "Unknown")")
                 self?.duration = track.duration
             }
             .store(in: &cancellables)
@@ -167,21 +186,14 @@ class PlayerViewModel: BaseViewModel {
         return String(format: "%d:%02d", minutes, seconds)
     }
 
-    /// Provides the managed track for a given identifier
-    func track(withID id: Track.ID) throws -> Track {
-        if let cached = trackCache[id] {
-            return cached
+    private func updateCurrentTrack(with track: Track?) {
+        guard let track else {
+            currentTrack = nil
+            duration = 0
+            return
         }
 
-        let request = Track.fetchRequest()
-        request.fetchLimit = 1
-        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
-
-        guard let track = try context.fetch(request).first else {
-            throw ViewModelError.trackNotFound
-        }
-
-        trackCache[id] = track
-        return track
+        currentTrack = TrackViewData(track: track)
+        duration = track.duration
     }
 }

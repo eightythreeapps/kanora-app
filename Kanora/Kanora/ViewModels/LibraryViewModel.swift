@@ -14,13 +14,8 @@ import Combine
 class LibraryViewModel: BaseViewModel {
     // MARK: - Published Properties
 
-    @Published private(set) var libraries: [LibrarySummary] = [] {
-        didSet { refreshSelectedLibrarySummary() }
-    }
-    @Published var selectedLibraryID: Library.ID? {
-        didSet { refreshSelectedLibrarySummary() }
-    }
-    @Published private(set) var selectedLibrarySummary: LibrarySummary?
+    @Published var libraries: [LibraryViewData] = []
+    @Published var selectedLibrary: LibraryViewData?
     @Published var viewState: ViewState = .idle
     @Published var statistics: LibraryStatistics?
     @Published var scanProgress: ScanProgress?
@@ -69,21 +64,16 @@ class LibraryViewModel: BaseViewModel {
                 in: context
             )
 
-            libraryCache = [:]
-            libraries = fetchedLibraries.compactMap { library in
-                guard let summary = LibrarySummary(library: library) else { return nil }
-                libraryCache[summary.id] = library
-                return summary
+            libraries = fetchedLibraries.map { LibraryViewData(library: $0) }
+
+            if let selected = selectedLibrary,
+               let updatedSelection = libraries.first(where: { $0.id == selected.id }) {
+                selectedLibrary = updatedSelection
             }
 
-            if let currentSelection = selectedLibraryID,
-               libraries.contains(where: { $0.id == currentSelection }) {
-                loadStatistics()
-            } else if let first = libraries.first {
-                selectLibrary(id: first.id)
-            } else {
-                selectedLibraryID = nil
-                statistics = nil
+            // Select first library if none selected
+            if selectedLibrary == nil, let first = libraries.first {
+                selectLibrary(first)
             }
 
             viewState = .loaded
@@ -108,13 +98,9 @@ class LibraryViewModel: BaseViewModel {
                 in: context
             )
 
-            guard let summary = LibrarySummary(library: library) else {
-                throw ViewModelError.libraryNotFound
-            }
-
-            libraryCache[summary.id] = library
-            libraries.append(summary)
-            selectLibrary(id: summary.id)
+            let viewData = LibraryViewData(library: library)
+            libraries.append(viewData)
+            selectLibrary(viewData)
         } catch {
             errorMessage = error.localizedDescription
             handleError(error, context: "Creating library")
@@ -122,21 +108,19 @@ class LibraryViewModel: BaseViewModel {
     }
 
     /// Selects a library and loads its statistics
-    func selectLibrary(id: Library.ID) {
-        guard selectedLibraryID != id else {
-            loadStatistics()
-            return
-        }
-
-        selectedLibraryID = id
+    func selectLibrary(_ library: LibraryViewData) {
+        selectedLibrary = library
         loadStatistics()
     }
 
     /// Deletes a library
-    func deleteLibrary(id: Library.ID) {
+    func deleteLibrary(_ library: LibraryViewData) {
         do {
-            let library = try requireLibrary(withID: id)
-            try services.libraryService.deleteLibrary(library, in: context)
+            guard let managedLibrary = fetchLibrary(with: library.id) else {
+                throw ViewModelError.libraryNotFound
+            }
+
+            try services.libraryService.deleteLibrary(managedLibrary, in: context)
 
             libraries.removeAll(where: { $0.id == id })
             libraryCache[id] = nil
@@ -162,15 +146,15 @@ class LibraryViewModel: BaseViewModel {
 
     /// Scans the selected library for audio files
     func scanLibrary() {
-        guard let library = selectedLibrary else {
-            errorMessage = L10n.Errors.noLibrarySelectedMessage
+        guard let library = selectedLibrary, let managedLibrary = fetchLibrary(with: library.id) else {
+            errorMessage = "No library selected"
             return
         }
 
         viewState = .loading
 
         services.libraryService.scanLibrary(
-            library,
+            managedLibrary,
             in: context,
             progressHandler: { [weak self] progress in
                 self?.scanProgress = ScanProgress(
@@ -208,14 +192,13 @@ class LibraryViewModel: BaseViewModel {
 
     /// Loads statistics for the selected library
     func loadStatistics() {
-        guard let selectedLibraryID,
-              let library = try? requireLibrary(withID: selectedLibraryID) else {
+        guard let library = selectedLibrary, let managedLibrary = fetchLibrary(with: library.id) else {
             statistics = nil
             return
         }
 
         statistics = services.libraryService.getLibraryStatistics(
-            for: library,
+            for: managedLibrary,
             in: context
         )
     }
@@ -240,30 +223,12 @@ class LibraryViewModel: BaseViewModel {
         return user
     }
 
-    private func refreshSelectedLibrarySummary() {
-        if let selectedLibraryID,
-           let summary = libraries.first(where: { $0.id == selectedLibraryID }) {
-            selectedLibrarySummary = summary
-        } else {
-            selectedLibrarySummary = nil
-        }
-    }
-
-    private func requireLibrary(withID id: Library.ID) throws -> Library {
-        if let cached = libraryCache[id] {
-            return cached
-        }
-
-        let request = Library.fetchRequest()
-        request.fetchLimit = 1
+    private func fetchLibrary(with id: Library.ID) -> Library? {
+        let request: NSFetchRequest<Library> = Library.fetchRequest()
         request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        request.fetchLimit = 1
 
-        guard let library = try context.fetch(request).first else {
-            throw ViewModelError.libraryNotFound
-        }
-
-        libraryCache[id] = library
-        return library
+        return try? context.fetch(request).first
     }
 }
 
