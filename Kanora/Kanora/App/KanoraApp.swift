@@ -19,7 +19,7 @@ struct KanoraApp: App {
         let services = ServiceContainer(persistence: persistenceController)
         self.persistenceController = persistenceController
         self.services = services
-        _playerViewModel = StateObject(wrappedValue: PlayerViewModel.shared(
+        _playerViewModel = StateObject(wrappedValue: PlayerViewModel(
             context: persistenceController.container.viewContext,
             services: services
         ))
