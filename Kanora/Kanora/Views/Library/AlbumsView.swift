@@ -39,28 +39,13 @@ struct AlbumsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Search bar
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
-                TextField(L10n.Library.searchAlbums, text: $searchText)
-                    .textFieldStyle(.plain)
-                if !searchText.isEmpty {
-                    Button(action: { searchText = "" }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(8)
-#if os(macOS)
-            .background(Color(nsColor: .textBackgroundColor).opacity(0.5))
-#else
-            .background(Color(uiColor: .secondarySystemBackground).opacity(0.5))
-#endif
-            .cornerRadius(8)
-            .padding()
+            LibrarySearchBar(
+                placeholder: L10n.Library.searchAlbums,
+                text: $searchText,
+                accessibilityLabel: L10n.Library.searchAlbums,
+                textFieldIdentifier: "albums-search-field",
+                clearButtonIdentifier: "albums-search-clear"
+            )
 
             // Albums grid
             if filteredAlbums.isEmpty {
