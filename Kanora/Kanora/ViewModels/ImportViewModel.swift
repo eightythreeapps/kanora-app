@@ -17,8 +17,13 @@ class ImportViewModel: BaseViewModel {
     private let logger = AppLogger.importViewModel
 
     @Published var viewState: ViewState = .idle
-    @Published var selectedLibrary: Library?
-    @Published var availableLibraries: [Library] = []
+    @Published var selectedLibraryID: Library.ID? {
+        didSet { updateSelectedLibrarySummary() }
+    }
+    @Published private(set) var availableLibraries: [LibrarySummary] = [] {
+        didSet { updateSelectedLibrarySummary() }
+    }
+    @Published private(set) var selectedLibrarySummary: LibrarySummary?
     @Published var importMode: ImportMode = .addToKanora
     @Published var importProgress: Double = 0.0
     @Published var currentFile: String?
@@ -34,7 +39,7 @@ class ImportViewModel: BaseViewModel {
     // MARK: - Computed Properties
 
     var canImport: Bool {
-        !selectedFiles.isEmpty && selectedLibrary != nil && viewState != .loading
+        !selectedFiles.isEmpty && selectedLibraryID != nil && viewState != .loading
     }
 
     var statusMessage: String {
@@ -64,11 +69,20 @@ class ImportViewModel: BaseViewModel {
             // Fetch all libraries
             let fetchRequest: NSFetchRequest<Library> = Library.fetchRequest()
             fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \Library.name, ascending: true)]
-            availableLibraries = try context.fetch(fetchRequest)
+            let fetchedLibraries = try context.fetch(fetchRequest)
 
-            // Auto-select first library (default user and library are created by app init)
-            if selectedLibrary == nil {
-                selectedLibrary = availableLibraries.first
+            libraryCache = [:]
+            availableLibraries = fetchedLibraries.compactMap { library in
+                guard let summary = LibrarySummary(library: library) else { return nil }
+                libraryCache[summary.id] = library
+                return summary
+            }
+
+            if let selectedLibraryID,
+               availableLibraries.contains(where: { $0.id == selectedLibraryID }) {
+                // Keep current selection
+            } else {
+                selectedLibraryID = availableLibraries.first?.id
             }
         } catch {
             handleError(error, context: "Loading libraries")
@@ -269,5 +283,36 @@ class ImportViewModel: BaseViewModel {
         case .error(let message):
             return message
         }
+    }
+
+    // MARK: - Library Helpers
+
+    private var libraryCache: [Library.ID: Library] = [:]
+
+    private func updateSelectedLibrarySummary() {
+        if let selectedLibraryID,
+           let summary = availableLibraries.first(where: { $0.id == selectedLibraryID }) {
+            selectedLibrarySummary = summary
+        } else {
+            selectedLibrarySummary = nil
+        }
+    }
+
+    /// Provides the managed library for a given identifier
+    func library(withID id: Library.ID) throws -> Library {
+        if let cached = libraryCache[id] {
+            return cached
+        }
+
+        let request = Library.fetchRequest()
+        request.fetchLimit = 1
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+
+        guard let library = try context.fetch(request).first else {
+            throw ViewModelError.libraryNotFound
+        }
+
+        libraryCache[id] = library
+        return library
     }
 }

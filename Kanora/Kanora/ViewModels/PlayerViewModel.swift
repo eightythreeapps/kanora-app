@@ -12,22 +12,10 @@ import Combine
 /// ViewModel for managing playback state and controls
 @MainActor
 class PlayerViewModel: BaseViewModel {
-    // MARK: - Shared Instance
-
-    private static var sharedInstance: PlayerViewModel?
-
-    static func shared(context: NSManagedObjectContext, services: ServiceContainer) -> PlayerViewModel {
-        if let existing = sharedInstance {
-            return existing
-        }
-        let instance = PlayerViewModel(context: context, services: services)
-        sharedInstance = instance
-        return instance
-    }
-
     // MARK: - Published Properties
 
-    @Published var currentTrack: Track?
+    @Published private(set) var currentTrack: TrackViewData?
+    @Published var currentTrackID: Track.ID?
     @Published var currentTime: TimeInterval = 0
     @Published var duration: TimeInterval = 0
     @Published var volume: Float = 0.7
@@ -48,8 +36,12 @@ class PlayerViewModel: BaseViewModel {
 
     // MARK: - Lifecycle
 
+    private var hasSubscribedToPlayerState = false
+
     override func onAppear() {
         super.onAppear()
+        guard !hasSubscribedToPlayerState else { return }
+        hasSubscribedToPlayerState = true
         subscribeToPlayerState()
     }
 
@@ -74,6 +66,7 @@ class PlayerViewModel: BaseViewModel {
     func stop() {
         services.audioPlayerService.stop()
         currentTrack = nil
+        currentTrackID = nil
         currentTime = 0
         duration = 0
         isPlaying = false
@@ -101,13 +94,19 @@ class PlayerViewModel: BaseViewModel {
     func playTrack(_ track: Track) {
         do {
             try services.audioPlayerService.play(track: track)
-            currentTrack = track
+            if let summary = TrackViewData(track: track) {
+                trackCache[summary.id] = track
+                currentTrackID = summary.id
+                currentTrack = summary
+            }
         } catch {
             handleError(error, context: "Playing track")
         }
     }
 
     // MARK: - Private Methods
+
+    private var trackCache: [Track.ID: Track] = [:]
 
     private func subscribeToPlayerState() {
         logger.debug("🔗 PlayerViewModel subscribing to player state")
@@ -126,6 +125,7 @@ class PlayerViewModel: BaseViewModel {
                     self?.duration = currentTrack.duration
                 } else if state == .idle || state == .stopped {
                     self?.currentTrack = nil
+                    self?.currentTrackID = nil
                     self?.duration = 0
                 }
             }
@@ -164,5 +164,23 @@ class PlayerViewModel: BaseViewModel {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
         return String(format: "%d:%02d", minutes, seconds)
+    }
+
+    /// Provides the managed track for a given identifier
+    func track(withID id: Track.ID) throws -> Track {
+        if let cached = trackCache[id] {
+            return cached
+        }
+
+        let request = Track.fetchRequest()
+        request.fetchLimit = 1
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+
+        guard let track = try context.fetch(request).first else {
+            throw ViewModelError.trackNotFound
+        }
+
+        trackCache[id] = track
+        return track
     }
 }
