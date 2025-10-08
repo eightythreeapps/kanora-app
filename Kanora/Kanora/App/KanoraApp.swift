@@ -41,7 +41,7 @@ struct KanoraApp: App {
                 try persistenceController.createDefaultUserAndLibrary()
             }
         } catch {
-            print("⚠️ Error checking/creating default data: \(error)")
+            AppLogger.appLifecycle.warning("⚠️ Error checking/creating default data: \(error)")
         }
     }
 

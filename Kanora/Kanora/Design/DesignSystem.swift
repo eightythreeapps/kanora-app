@@ -17,6 +17,8 @@ public class DesignSystem {
     // MARK: - Shared Instance
     public static let shared = DesignSystem()
 
+    private let logger = AppLogger.designSystem
+
     // MARK: - Theme Manager
     public let themeManager: ThemeManager
 
@@ -39,13 +41,13 @@ public class DesignSystem {
 
     /// Setup the design system with the app
     public func setup() {
-        print("🎨 Design System initialized with \(Self.availableThemes.count) themes")
+        logger.info("🎨 Design System initialized with \(Self.availableThemes.count) themes")
     }
 
     /// Setup design system with custom themes
     public func setup(withAdditionalThemes additionalThemes: [any Theme]) {
         themeManager.registerThemes(additionalThemes)
-        print("🎨 Design System initialized with \(themeManager.availableThemes.count) themes")
+        logger.info("🎨 Design System initialized with \(themeManager.availableThemes.count) themes")
     }
 }
 

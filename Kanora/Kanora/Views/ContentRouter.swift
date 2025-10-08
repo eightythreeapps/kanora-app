@@ -108,12 +108,15 @@ struct PlaceholderView: View {
         services: services
     )
     let navigationState = NavigationState()
+    let playerViewModel = PlayerViewModel(
+        context: services.persistence.viewContext,
+        services: services
+    )
     return NavigationView {
         ContentRouter(destination: .artists, navigationState: navigationState)
     }
-    .environmentObject(navigationState)
     .environment(\.managedObjectContext, services.persistence.viewContext)
-    .environment(\.serviceContainer, services)
+    .environmentObject(navigationState)
     .environmentObject(playerViewModel)
 }
 
@@ -124,11 +127,14 @@ struct PlaceholderView: View {
         services: services
     )
     let navigationState = NavigationState()
+    let playerViewModel = PlayerViewModel(
+        context: services.persistence.viewContext,
+        services: services
+    )
     return NavigationView {
         ContentRouter(destination: .cdRipping, navigationState: navigationState)
     }
-    .environmentObject(navigationState)
     .environment(\.managedObjectContext, services.persistence.viewContext)
-    .environment(\.serviceContainer, services)
+    .environmentObject(navigationState)
     .environmentObject(playerViewModel)
 }

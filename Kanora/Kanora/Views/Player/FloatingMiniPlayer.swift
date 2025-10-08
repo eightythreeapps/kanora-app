@@ -50,7 +50,7 @@ struct FloatingMiniPlayer: View {
                 HStack(spacing: 12) {
                     // Album art
                     Group {
-                        if let artworkImage = viewModel.currentTrack?.album?.artworkImage {
+                        if let artworkImage = viewModel.currentTrack?.artworkImage {
                             #if os(macOS)
                             Image(nsImage: artworkImage)
                                 .resizable()
@@ -76,11 +76,11 @@ struct FloatingMiniPlayer: View {
                     // Track info
                     if let track = viewModel.currentTrack {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(track.title ?? String(localized: "library.unknown_track"))
+                            Text(track.title)
                                 .font(.subheadline)
                                 .fontWeight(.medium)
                                 .lineLimit(1)
-                            Text(track.album?.artist?.name ?? String(localized: "library.unknown_artist"))
+                            Text(track.artistName)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                                 .lineLimit(1)
@@ -135,7 +135,7 @@ struct FloatingMiniPlayer: View {
             HStack(spacing: 16) {
                 // Album art
                 Group {
-                    if let artworkImage = viewModel.currentTrack?.album?.artworkImage {
+                    if let artworkImage = viewModel.currentTrack?.artworkImage {
                         #if os(macOS)
                         Image(nsImage: artworkImage)
                             .resizable()
@@ -161,10 +161,10 @@ struct FloatingMiniPlayer: View {
                 // Track info
                 if let track = viewModel.currentTrack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(track.title ?? String(localized: "library.unknown_track"))
+                        Text(track.title)
                             .font(.headline)
                             .lineLimit(1)
-                        Text(track.album?.artist?.name ?? String(localized: "library.unknown_artist"))
+                        Text(track.artistName)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .lineLimit(1)
@@ -278,4 +278,17 @@ struct FloatingMiniPlayer: View {
         .environment(\.managedObjectContext, services.persistence.viewContext)
         .environment(\.serviceContainer, services)
         .environmentObject(playerViewModel)
+    let dependencies = PreviewFactory.makePreviewDependencies()
+    return FloatingMiniPlayer()
+        .environment(\.managedObjectContext, dependencies.services.persistence.viewContext)
+        .environment(\.horizontalSizeClass, .compact)
+        .environmentObject(dependencies.playerViewModel)
+}
+
+#Preview("Populated - Regular") {
+    let dependencies = PreviewFactory.makePreviewDependencies()
+    return FloatingMiniPlayer()
+        .environment(\.managedObjectContext, dependencies.services.persistence.viewContext)
+        .environment(\.horizontalSizeClass, .regular)
+        .environmentObject(dependencies.playerViewModel)
 }

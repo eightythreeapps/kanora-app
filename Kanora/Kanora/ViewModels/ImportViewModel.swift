@@ -14,9 +14,16 @@ import UniformTypeIdentifiers
 class ImportViewModel: BaseViewModel {
     // MARK: - Published Properties
 
+    private let logger = AppLogger.importViewModel
+
     @Published var viewState: ViewState = .idle
-    @Published var selectedLibrary: Library?
-    @Published var availableLibraries: [Library] = []
+    @Published var selectedLibraryID: Library.ID? {
+        didSet { updateSelectedLibrarySummary() }
+    }
+    @Published private(set) var availableLibraries: [LibrarySummary] = [] {
+        didSet { updateSelectedLibrarySummary() }
+    }
+    @Published private(set) var selectedLibrarySummary: LibrarySummary?
     @Published var importMode: ImportMode = .addToKanora
     @Published var importProgress: Double = 0.0
     @Published var currentFile: String?
@@ -32,7 +39,7 @@ class ImportViewModel: BaseViewModel {
     // MARK: - Computed Properties
 
     var canImport: Bool {
-        !selectedFiles.isEmpty && selectedLibrary != nil && viewState != .loading
+        !selectedFiles.isEmpty && selectedLibraryID != nil && viewState != .loading
     }
 
     var statusMessage: String {
@@ -62,11 +69,20 @@ class ImportViewModel: BaseViewModel {
             // Fetch all libraries
             let fetchRequest: NSFetchRequest<Library> = Library.fetchRequest()
             fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \Library.name, ascending: true)]
-            availableLibraries = try context.fetch(fetchRequest)
+            let fetchedLibraries = try context.fetch(fetchRequest)
 
-            // Auto-select first library (default user and library are created by app init)
-            if selectedLibrary == nil {
-                selectedLibrary = availableLibraries.first
+            libraryCache = [:]
+            availableLibraries = fetchedLibraries.compactMap { library in
+                guard let summary = LibrarySummary(library: library) else { return nil }
+                libraryCache[summary.id] = library
+                return summary
+            }
+
+            if let selectedLibraryID,
+               availableLibraries.contains(where: { $0.id == selectedLibraryID }) {
+                // Keep current selection
+            } else {
+                selectedLibraryID = availableLibraries.first?.id
             }
         } catch {
             handleError(error, context: "Loading libraries")
@@ -75,19 +91,19 @@ class ImportViewModel: BaseViewModel {
     }
 
     func selectFiles(_ urls: [URL]) {
-        print("🎵 selectFiles called with \(urls.count) URLs")
+        logger.debug("🎵 selectFiles called with \(urls.count) URLs")
         for url in urls {
-            print("  - \(url.lastPathComponent) (\(url.pathExtension))")
+            logger.debug("  - \(url.lastPathComponent) (\(url.pathExtension))")
         }
 
         // Filter for valid audio files
         let validFiles = urls.filter { url in
             let isValid = services.fileImportService.isValidAudioFile(url)
-            print("  - \(url.lastPathComponent): valid = \(isValid)")
+            logger.debug("  - \(url.lastPathComponent): valid = \(isValid)")
             return isValid
         }
 
-        print("✅ Valid files: \(validFiles.count)")
+        logger.info("✅ Valid files: \(validFiles.count)")
         selectedFiles = validFiles
 
         if validFiles.count != urls.count {
@@ -95,7 +111,7 @@ class ImportViewModel: BaseViewModel {
             importErrors.append("\(invalidCount) invalid files skipped")
         }
 
-        print("📁 selectedFiles now contains: \(selectedFiles.count) files")
+        logger.debug("📁 selectedFiles now contains: \(selectedFiles.count) files")
     }
 
     func removeFile(at index: Int) {
@@ -111,24 +127,24 @@ class ImportViewModel: BaseViewModel {
     }
 
     func selectDirectory(_ directoryURL: URL) {
-        print("📂 selectDirectory called: \(directoryURL.path)")
+        logger.debug("📂 selectDirectory called: \(directoryURL.path)")
         selectedDirectory = directoryURL
 
         // Scan directory for audio files
         let audioFiles = services.fileImportService.scanDirectory(directoryURL)
         selectedFiles = audioFiles
 
-        print("🎵 Found \(audioFiles.count) audio files in directory")
+        logger.debug("🎵 Found \(audioFiles.count) audio files in directory")
     }
 
     func startImport() {
-        print("🚀 startImport called")
-        print("📁 Selected files count: \(selectedFiles.count)")
-        print("📂 Import mode: \(importMode.displayName)")
-        print("📚 Selected library: \(selectedLibrary?.name ?? "nil")")
+        logger.debug("🚀 startImport called")
+        logger.debug("📁 Selected files count: \(selectedFiles.count)")
+        logger.debug("📂 Import mode: \(importMode.displayName)")
+        logger.debug("📚 Selected library: \(selectedLibrary?.name ?? "nil")")
 
         guard let library = selectedLibrary else {
-            print("❌ No library selected")
+            logger.error("❌ No library selected")
             viewState = .error("No library selected")
             return
         }
@@ -136,12 +152,12 @@ class ImportViewModel: BaseViewModel {
         // For "Point at Directory" mode, use the pointAtDirectory method
         if importMode == .pointAtDirectory {
             guard let directory = selectedDirectory else {
-                print("❌ No directory selected")
+                logger.error("❌ No directory selected")
                 viewState = .error("No directory selected for Point at Directory mode")
                 return
             }
 
-            print("📍 Pointing library at directory: \(directory.path)")
+            logger.debug("📍 Pointing library at directory: \(directory.path)")
             viewState = .loading
             importProgress = 0.0
             filesProcessed = 0
@@ -179,41 +195,41 @@ class ImportViewModel: BaseViewModel {
 
         // For "Add to Kanora" mode, files must be selected
         guard !selectedFiles.isEmpty else {
-            print("❌ No files selected")
+            logger.error("❌ No files selected")
             viewState = .error("No files selected")
             return
         }
 
-        print("✅ Starting import of \(selectedFiles.count) files")
+        logger.info("✅ Starting import of \(selectedFiles.count) files")
         viewState = .loading
         importProgress = 0.0
         filesProcessed = 0
         totalFiles = selectedFiles.count
         importErrors.removeAll()
 
-        print("🔄 Calling fileImportService.importFiles with mode: \(importMode.displayName)")
+        logger.debug("🔄 Calling fileImportService.importFiles with mode: \(importMode.displayName)")
         services.fileImportService
             .importFiles(selectedFiles, into: library, in: context, mode: importMode)
             .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] completion in
                     guard let self = self else { return }
-                    print("🏁 Import completion: \(completion)")
+                    logger.info("🏁 Import completion: \(completion)")
                     switch completion {
                     case .finished:
-                        print("✅ Import finished successfully - \(self.filesProcessed) files")
+                        logger.info("✅ Import finished successfully - \(self.filesProcessed) files")
                         self.viewState = .loaded
                         self.importStatus = "\(self.filesProcessed) files imported successfully"
                         self.selectedFiles.removeAll()
                     case .failure(let error):
-                        print("❌ Import failed: \(error.localizedDescription)")
+                        logger.error("❌ Import failed: \(error.localizedDescription)")
                         self.viewState = .error(error.localizedDescription)
                         self.handleError(error, context: "Importing files")
                     }
                 },
                 receiveValue: { [weak self] progress in
                     guard let self = self else { return }
-                    print("📊 Progress: \(progress.filesProcessed)/\(progress.totalFiles) - \(progress.status)")
+                    logger.debug("📊 Progress: \(progress.filesProcessed)/\(progress.totalFiles) - \(progress.status)")
                     self.importProgress = progress.percentage
                     self.filesProcessed = progress.filesProcessed
                     self.currentFile = progress.currentFile
@@ -221,7 +237,7 @@ class ImportViewModel: BaseViewModel {
                 }
             )
             .store(in: &cancellables)
-        print("💾 Publisher stored in cancellables")
+        logger.debug("💾 Publisher stored in cancellables")
     }
 
     // MARK: - Drag and Drop
@@ -267,5 +283,36 @@ class ImportViewModel: BaseViewModel {
         case .error(let message):
             return message
         }
+    }
+
+    // MARK: - Library Helpers
+
+    private var libraryCache: [Library.ID: Library] = [:]
+
+    private func updateSelectedLibrarySummary() {
+        if let selectedLibraryID,
+           let summary = availableLibraries.first(where: { $0.id == selectedLibraryID }) {
+            selectedLibrarySummary = summary
+        } else {
+            selectedLibrarySummary = nil
+        }
+    }
+
+    /// Provides the managed library for a given identifier
+    func library(withID id: Library.ID) throws -> Library {
+        if let cached = libraryCache[id] {
+            return cached
+        }
+
+        let request = Library.fetchRequest()
+        request.fetchLimit = 1
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+
+        guard let library = try context.fetch(request).first else {
+            throw ViewModelError.libraryNotFound
+        }
+
+        libraryCache[id] = library
+        return library
     }
 }

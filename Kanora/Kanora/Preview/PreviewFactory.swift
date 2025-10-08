@@ -29,23 +29,18 @@ struct PreviewFactory {
     /// Creates ContentView with preview data
     static func makeContentView(state: PreviewState = .populated) -> some View {
         let services = makeServices(for: state)
-        let playerViewModel = PlayerViewModel(
-            context: services.persistence.viewContext,
-            services: services
-        )
-        return ContentView()
+        return ContentView(services: services)
             .environment(\.managedObjectContext, services.persistence.viewContext)
-            .environment(\.serviceContainer, services)
-            .environmentObject(playerViewModel)
             .designSystem()
     }
 
     /// Creates SidebarView with preview data
     static func makeSidebarView(state: PreviewState = .populated) -> some View {
         let services = makeServices(for: state)
+        let playerViewModel = makePlayerViewModel(for: services)
         return SidebarView(navigationState: NavigationState())
             .environment(\.managedObjectContext, services.persistence.viewContext)
-            .environment(\.serviceContainer, services)
+            .environmentObject(playerViewModel)
             .frame(width: 200)
             .designSystem()
     }
@@ -55,9 +50,10 @@ struct PreviewFactory {
     /// Creates ArtistsView with preview data
     static func makeArtistsView(state: PreviewState = .populated) -> some View {
         let services = makeServices(for: state)
+        let playerViewModel = makePlayerViewModel(for: services)
         return ArtistsView()
             .environment(\.managedObjectContext, services.persistence.viewContext)
-            .environment(\.serviceContainer, services)
+            .environmentObject(playerViewModel)
             .designSystem()
     }
 
@@ -65,6 +61,7 @@ struct PreviewFactory {
     static func makeArtistDetailView(state: PreviewState = .populated) -> some View {
         let services = makeServices(for: state)
         let context = services.persistence.viewContext
+        let playerViewModel = makePlayerViewModel(for: services)
 
         // Fetch first artist
         let fetchRequest = Artist.fetchRequest()
@@ -82,7 +79,6 @@ struct PreviewFactory {
 
         return ArtistDetailView(artist: artist)
             .environment(\.managedObjectContext, context)
-            .environment(\.serviceContainer, services)
             .environmentObject(playerViewModel)
             .designSystem()
     }
@@ -90,13 +86,9 @@ struct PreviewFactory {
     /// Creates AlbumsView with preview data
     static func makeAlbumsView(state: PreviewState = .populated) -> some View {
         let services = makeServices(for: state)
-        let playerViewModel = PlayerViewModel(
-            context: services.persistence.viewContext,
-            services: services
-        )
+        let playerViewModel = makePlayerViewModel(for: services)
         return AlbumsView()
             .environment(\.managedObjectContext, services.persistence.viewContext)
-            .environment(\.serviceContainer, services)
             .environmentObject(playerViewModel)
             .designSystem()
     }
@@ -105,6 +97,7 @@ struct PreviewFactory {
     static func makeAlbumDetailView(state: PreviewState = .populated) -> some View {
         let services = makeServices(for: state)
         let context = services.persistence.viewContext
+        let playerViewModel = makePlayerViewModel(for: services)
 
         // Fetch first album
         let fetchRequest = Album.fetchRequest()
@@ -127,7 +120,6 @@ struct PreviewFactory {
 
         return AlbumDetailView(album: album)
             .environment(\.managedObjectContext, context)
-            .environment(\.serviceContainer, services)
             .environmentObject(playerViewModel)
             .designSystem()
     }
@@ -135,18 +127,20 @@ struct PreviewFactory {
     /// Creates TracksView with preview data
     static func makeTracksView(state: PreviewState = .populated) -> some View {
         let services = makeServices(for: state)
+        let playerViewModel = makePlayerViewModel(for: services)
         return TracksView()
             .environment(\.managedObjectContext, services.persistence.viewContext)
-            .environment(\.serviceContainer, services)
+            .environmentObject(playerViewModel)
             .designSystem()
     }
 
     /// Creates PlaylistsView with preview data
     static func makePlaylistsView(state: PreviewState = .populated) -> some View {
         let services = makeServices(for: state)
+        let playerViewModel = makePlayerViewModel(for: services)
         return PlaylistsView()
             .environment(\.managedObjectContext, services.persistence.viewContext)
-            .environment(\.serviceContainer, services)
+            .environmentObject(playerViewModel)
             .designSystem()
     }
 
@@ -155,14 +149,9 @@ struct PreviewFactory {
     /// Creates PlayerControlsView with preview data
     static func makePlayerControlsView(state: PreviewState = .populated) -> some View {
         let services = makeServices(for: state)
-        let playerViewModel = PlayerViewModel(
-            context: services.persistence.viewContext,
-            services: services
-        )
-
+        let playerViewModel = makePlayerViewModel(for: services)
         return PlayerControlsView()
             .environment(\.managedObjectContext, services.persistence.viewContext)
-            .environment(\.serviceContainer, services)
             .environmentObject(playerViewModel)
             .frame(height: 100)
             .designSystem()
@@ -171,25 +160,46 @@ struct PreviewFactory {
     /// Creates NowPlayingView with preview data
     static func makeNowPlayingView(state: PreviewState = .populated) -> some View {
         let services = makeServices(for: state)
-        let playerViewModel = PlayerViewModel(
-            context: services.persistence.viewContext,
-            services: services
-        )
-
+        let playerViewModel = makePlayerViewModel(for: services)
         return NowPlayingView()
             .environment(\.managedObjectContext, services.persistence.viewContext)
-            .environment(\.serviceContainer, services)
             .environmentObject(playerViewModel)
             .designSystem()
     }
 
+    // MARK: - Settings Views
+
+    /// Creates DevToolsView with preview data
+    static func makeDevToolsView(state: PreviewState = .populated) -> some View {
+        let services = makeServices(for: state)
+        let playerViewModel = makePlayerViewModel(for: services)
+        return DevToolsView(services: services)
+            .environment(\.managedObjectContext, services.persistence.viewContext)
+            .environmentObject(playerViewModel)
+            .designSystem()
+    }
+
+    /// Provides shared preview dependencies for manual previews
+    static func makePreviewDependencies(state: PreviewState = .populated) -> (services: ServiceContainer, playerViewModel: PlayerViewModel) {
+        let services = makeServices(for: state)
+        let playerViewModel = makePlayerViewModel(for: services)
+        return (services, playerViewModel)
+    }
+
     // MARK: - Private Helpers
 
-    /// Creates an in-memory Core Data container with test data based on state
     private static func makeServices(for state: PreviewState) -> ServiceContainer {
         let persistence = PersistenceController(inMemory: true)
+        let services = ServiceContainer(persistence: persistence)
         generateTestData(for: state, in: persistence.viewContext)
-        return ServiceContainer(persistence: persistence)
+        return services
+    }
+
+    private static func makePlayerViewModel(for services: ServiceContainer) -> PlayerViewModel {
+        PlayerViewModel(
+            context: services.persistence.viewContext,
+            services: services
+        )
     }
 
     /// Generates test data in the given context based on preview state
@@ -225,19 +235,8 @@ struct PreviewFactory {
         do {
             try context.save()
         } catch {
-            print("❌ Failed to save preview context: \(error)")
+            AppLogger.preview.error("❌ Failed to save preview context: \(error)")
         }
-    }
-
-    // MARK: - Settings Views
-
-    /// Creates DevToolsView with preview data
-    static func makeDevToolsView(state: PreviewState = .populated) -> some View {
-        let services = makeServices(for: state)
-        return DevToolsView(services: services)
-            .environment(\.managedObjectContext, services.persistence.viewContext)
-            .environment(\.serviceContainer, services)
-            .designSystem()
     }
 }
 

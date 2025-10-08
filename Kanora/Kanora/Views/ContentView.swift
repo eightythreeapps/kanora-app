@@ -14,6 +14,16 @@ struct ContentView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.serviceContainer) private var services
     @StateObject private var navigationState = NavigationState()
+    @StateObject private var playerViewModel: PlayerViewModel
+    private let services: ServiceContainer
+
+    init(services: ServiceContainer = .shared) {
+        self._playerViewModel = StateObject(wrappedValue: PlayerViewModel(
+            context: services.persistence.viewContext,
+            services: services
+        ))
+        self.services = services
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -35,6 +45,7 @@ struct ContentView: View {
                 FloatingMiniPlayer()
             }
         }
+        .environmentObject(playerViewModel)
     }
 
     // MARK: - Layout Variants
