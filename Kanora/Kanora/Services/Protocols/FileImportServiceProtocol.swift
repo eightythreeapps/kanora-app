@@ -9,6 +9,7 @@ import Foundation
 import CoreData
 import Combine
 import UniformTypeIdentifiers
+import SwiftUI
 
 /// Protocol defining file import operations
 protocol FileImportServiceProtocol {
@@ -79,21 +80,21 @@ enum ImportMode: String, CaseIterable {
     case addToKanora = "addToKanora"           // Copy and organize in Kanora directory
     case pointAtDirectory = "pointAtDirectory"  // Link to external directory (no copy)
 
-    var displayName: String {
+    var displayName: LocalizedStringKey {
         switch self {
         case .addToKanora:
-            return "Add to Kanora"
+            return L10n.Import.Mode.addToKanoraTitle
         case .pointAtDirectory:
-            return "Point at Directory"
+            return L10n.Import.Mode.pointAtDirectoryTitle
         }
     }
 
-    var description: String {
+    var description: LocalizedStringKey {
         switch self {
         case .addToKanora:
-            return "Copy files to Kanora and organize them by Artist/Album"
+            return L10n.Import.Mode.addToKanoraDescription
         case .pointAtDirectory:
-            return "Keep files in their current location and scan recursively"
+            return L10n.Import.Mode.pointAtDirectoryDescription
         }
     }
 
@@ -104,6 +105,14 @@ enum ImportMode: String, CaseIterable {
         case .pointAtDirectory:
             return "folder.badge.gearshape"
         }
+    }
+
+    var displayNameText: String {
+        L10n.Import.Mode.displayNameString(for: self)
+    }
+
+    var descriptionText: String {
+        L10n.Import.Mode.descriptionString(for: self)
     }
 }
 

@@ -28,7 +28,7 @@ class FileImportService: FileImportServiceProtocol {
         mode: ImportMode
     ) -> AnyPublisher<ImportProgress, Error> {
         print("🎵 FileImportService.importFiles called with \(urls.count) URLs")
-        print("📋 Import mode: \(mode.displayName)")
+        print("📋 Import mode: \(mode.displayNameText)")
         let subject = PassthroughSubject<ImportProgress, Error>()
 
         // Perform import in background

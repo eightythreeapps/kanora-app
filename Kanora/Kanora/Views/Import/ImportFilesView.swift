@@ -44,7 +44,7 @@ struct ImportFilesView: View {
 
                     Picker("", selection: $viewModel.selectedLibrary) {
                         ForEach(viewModel.availableLibraries, id: \.self) { library in
-                            Text(library.name ?? String(localized: "library.unknown"))
+                            Text(library.name ?? L10n.Library.unknownLibraryName)
                                 .tag(library as Library?)
                         }
                     }
@@ -55,7 +55,7 @@ struct ImportFilesView: View {
 
             // Import Mode Selector - Card-based
             VStack(alignment: .leading, spacing: 12) {
-                Text("Choose Import Method")
+                Text(L10n.Import.chooseMethod)
                     .font(.headline)
                     .padding(.horizontal)
 
@@ -201,7 +201,7 @@ struct ImportFilesView: View {
                 .font(.headline)
                 .foregroundColor(.secondary)
 
-            Text("Supported formats: MP3, FLAC, M4A, WAV, AAC")
+            Text(L10n.Import.supportedFormats)
                 .font(.caption)
                 .foregroundColor(.secondary)
 
@@ -236,7 +236,7 @@ struct ImportFilesView: View {
     private var fileList: some View {
         VStack(spacing: 8) {
             HStack {
-                Text("\(viewModel.selectedFiles.count) files selected")
+                Text(L10n.Import.filesSelected(viewModel.selectedFiles.count))
                     .font(.headline)
                 Spacer()
                 Button(action: viewModel.clearFiles) {
@@ -280,7 +280,7 @@ struct ImportFilesView: View {
                     .lineLimit(1)
             }
 
-            Text("\(viewModel.filesProcessed) / \(viewModel.totalFiles)")
+            Text(L10n.Import.progressFraction(viewModel.filesProcessed, viewModel.totalFiles))
                 .font(.caption)
                 .foregroundColor(.secondary)
         }

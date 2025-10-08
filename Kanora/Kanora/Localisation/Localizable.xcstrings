@@ -684,6 +684,17 @@
         }
       }
     },
+    "errors.invalid_path" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid file path"
+          }
+        }
+      }
+    },
     "errors.load_failed" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -695,6 +706,28 @@
         }
       }
     },
+    "errors.failed_to_load_libraries" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to load libraries"
+          }
+        }
+      }
+    },
+    "errors.library_not_found" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Library not found"
+          }
+        }
+      }
+    },
     "errors.network" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -702,6 +735,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Network error occurred"
+          }
+        }
+      }
+    },
+    "errors.no_library_selected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No library selected"
+          }
+        }
+      }
+    },
+    "errors.no_user_found" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No user found"
           }
         }
       }
@@ -885,6 +940,17 @@
     "import.clear_selection" : {
 
     },
+    "import.choose_method" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose Import Method"
+          }
+        }
+      }
+    },
     "import.complete" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -900,7 +966,15 @@
 
     },
     "import.copying_files" : {
-
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copying files..."
+          }
+        }
+      }
     },
     "import.detecting_cd" : {
       "extractionState" : "manual",
@@ -913,11 +987,93 @@
         }
       }
     },
+    "import.library_point_success %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Library successfully pointed at %1$@"
+          }
+        }
+      }
+    },
+    "import.progress_fraction %lld %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld / %2$lld"
+          }
+        }
+      }
+    },
+    "import.mode.add_to_kanora.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy files to Kanora and organize them by Artist/Album"
+          }
+        }
+      }
+    },
+    "import.mode.add_to_kanora.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add to Kanora"
+          }
+        }
+      }
+    },
+    "import.mode.point_at_directory.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep files in their current location and scan recursively"
+          }
+        }
+      }
+    },
+    "import.mode.point_at_directory.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Point at Directory"
+          }
+        }
+      }
+    },
     "import.drop_files_here" : {
-
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Drop files here"
+          }
+        }
+      }
     },
     "import.extracting_metadata" : {
-
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extracting metadata..."
+          }
+        }
+      }
     },
     "import.files_imported %lld" : {
       "extractionState" : "manual",
@@ -943,7 +1099,60 @@
       }
     },
     "import.files_selected %lld" : {
-
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld file selected"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld files selected"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "import.no_directory_selected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No directory selected for Point at Directory mode"
+          }
+        }
+      }
+    },
+    "import.no_files_selected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No files selected"
+          }
+        }
+      }
+    },
+    "import.no_library_selected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No library selected"
+          }
+        }
+      }
     },
     "import.importing" : {
       "extractionState" : "manual",
@@ -957,10 +1166,26 @@
       }
     },
     "import.importing_file %@" : {
-
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importing %1$@"
+          }
+        }
+      }
     },
     "import.importing_files" : {
-
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Importing files..."
+          }
+        }
+      }
     },
     "import.insert_cd" : {
       "extractionState" : "manual",
@@ -974,7 +1199,27 @@
       }
     },
     "import.invalid_files_skipped %lld" : {
-
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld invalid file skipped"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld invalid files skipped"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "import.lookup_metadata" : {
       "extractionState" : "manual",
@@ -991,7 +1236,15 @@
 
     },
     "import.preparing" : {
-
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Preparing..."
+          }
+        }
+      }
     },
     "import.rip_complete" : {
       "extractionState" : "manual",
@@ -1026,6 +1279,28 @@
         }
       }
     },
+    "import.select_files_prompt" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select audio files to import"
+          }
+        }
+      }
+    },
+    "import.supported_formats" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supported formats: MP3, FLAC, M4A, WAV, AAC"
+          }
+        }
+      }
+    },
     "import.select_folder" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1038,10 +1313,26 @@
       }
     },
     "import.select_library" : {
-
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select Library"
+          }
+        }
+      }
     },
     "import.start_import" : {
-
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Import"
+          }
+        }
+      }
     },
     "import.start_ripping" : {
       "extractionState" : "manual",
@@ -1373,7 +1664,15 @@
       }
     },
     "library.unknown" : {
-
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unknown Library"
+          }
+        }
+      }
     },
     "library.unknown_album" : {
       "extractionState" : "manual",
@@ -1877,6 +2176,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Queue"
+          }
+        }
+      }
+    },
+    "player.queue.placeholder_artist" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Artist Name"
+          }
+        }
+      }
+    },
+    "player.queue.placeholder_title %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Track %1$lld"
           }
         }
       }
