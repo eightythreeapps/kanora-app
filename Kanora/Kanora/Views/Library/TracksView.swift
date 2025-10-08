@@ -33,7 +33,9 @@ struct TracksView: View {
     @State private var lastTappedTrackID: Track.ID?
     @State private var lastTapTime = Date()
 
+    @Environment(\.serviceContainer) private var services
     private let services = ServiceContainer.shared
+    private let logger = AppLogger.libraryView
 
 #if os(iOS)
     @Environment(\.horizontalSizeClass) private var hSizeClass
@@ -102,29 +104,29 @@ struct TracksView: View {
                 .width(80)
             }
             .onChange(of: selectedTrackID) { newValue in
-                print("📊 Selection changed to: \(String(describing: newValue))")
-                print("⏰ Last tap time: \(Date().timeIntervalSince(lastTapTime))s ago")
-                print("🎯 Last tapped ID: \(String(describing: lastTappedTrackID))")
+                logger.debug("📊 Selection changed to: \(String(describing: newValue))")
+                logger.debug("⏰ Last tap time: \(Date().timeIntervalSince(lastTapTime))s ago")
+                logger.debug("🎯 Last tapped ID: \(String(describing: lastTappedTrackID))")
 
                 // Track double-click timing
                 if let trackID = newValue,
                    let track = filteredTracks.first(where: { $0.id == trackID }) {
-                    print("✅ Found track: \(track.title ?? "Unknown")")
+                    logger.info("✅ Found track: \(track.title ?? "Unknown")")
 
                     if trackID == lastTappedTrackID,
                        Date().timeIntervalSince(lastTapTime) < 0.5 {
                         // Double-click detected
-                        print("🖱️ Double-click detected on: \(track.title ?? "Unknown")")
+                        logger.debug("🖱️ Double-click detected on: \(track.title ?? "Unknown")")
                         playTrack(track)
                         lastTappedTrackID = nil
                     } else {
                         // Single click
-                        print("👆 Single click on: \(track.title ?? "Unknown")")
+                        logger.debug("👆 Single click on: \(track.title ?? "Unknown")")
                         lastTappedTrackID = trackID
                         lastTapTime = Date()
                     }
                 } else if newValue != nil {
-                    print("❌ Track not found in filtered list")
+                    logger.error("❌ Track not found in filtered list")
                 }
             }
         } else {
@@ -140,7 +142,7 @@ struct TracksView: View {
     }
 
     private func playTrack(_ track: Track) {
-        print("🎵 Playing track: \(track.title ?? "Unknown")")
+        logger.info("🎵 Playing track: \(track.title ?? "Unknown")")
         // Set queue to all filtered tracks, starting at the selected track
         if let index = filteredTracks.firstIndex(of: track) {
             services.audioPlayerService.setQueue(tracks: filteredTracks, startIndex: index)
@@ -187,27 +189,13 @@ struct TracksView: View {
     var body: some View {
         VStack(spacing: 0) {
 #if os(macOS)
-            // Search bar
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
-                TextField(L10n.Library.searchTracks, text: $searchText)
-                    .textFieldStyle(.plain)
-                if !searchText.isEmpty {
-                    Button(action: { searchText = "" }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-    #if os(macOS)
-            .background(Color(nsColor: .textBackgroundColor).opacity(0.5))
-    #else
-            .background(Color(uiColor: .secondarySystemBackground).opacity(0.5))
-    #endif
-            .cornerRadius(8)
-            .padding()
+            LibrarySearchBar(
+                placeholder: L10n.Library.searchTracks,
+                text: $searchText,
+                accessibilityLabel: L10n.Library.searchTracks,
+                textFieldIdentifier: "tracks-search-field",
+                clearButtonIdentifier: "tracks-search-clear"
+            )
 #endif
 
             // Tracks list

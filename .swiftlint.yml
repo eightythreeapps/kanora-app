@@ -112,4 +112,4 @@ custom_rules:
     name: "No print statements"
     regex: "\\bprint\\("
     message: "Use proper logging instead of print"
-    severity: warning
+    severity: error

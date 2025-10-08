@@ -114,7 +114,7 @@ struct CoreDataTestUtilities {
         do {
             try context.save()
         } catch {
-            print("Error creating sample data: \(error)")
+            AppLogger.coreDataTest.error("Error creating sample data: \(error)")
         }
     }
 
@@ -138,7 +138,7 @@ struct CoreDataTestUtilities {
                 try context.execute(deleteRequest)
                 try context.save()
             } catch {
-                print("Error clearing \(entityName): \(error)")
+                AppLogger.coreDataTest.error("Error clearing \(entityName): \(error)")
             }
         }
     }

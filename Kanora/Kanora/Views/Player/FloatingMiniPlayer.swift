@@ -13,17 +13,9 @@ import UIKit
 #endif
 
 struct FloatingMiniPlayer: View {
-    @StateObject private var viewModel: PlayerViewModel
+    @EnvironmentObject private var viewModel: PlayerViewModel
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var isExpanded = false
-
-    init(services: ServiceContainer) {
-        // Use shared PlayerViewModel instance
-        _viewModel = StateObject(wrappedValue: PlayerViewModel.shared(
-            context: services.persistence.viewContext,
-            services: services
-        ))
-    }
 
     var body: some View {
         Group {
@@ -60,7 +52,7 @@ struct FloatingMiniPlayer: View {
                 HStack(spacing: 12) {
                     // Album art
                     Group {
-                        if let artworkImage = artworkImage(for: viewModel.currentTrack) {
+                        if let artworkImage = viewModel.currentTrack?.artworkImage {
                             #if os(macOS)
                             Image(nsImage: artworkImage)
                                 .resizable()
@@ -86,11 +78,11 @@ struct FloatingMiniPlayer: View {
                     // Track info
                     if let track = viewModel.currentTrack {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(track.title.isEmpty ? String(localized: "library.unknown_track") : track.title)
+                            Text(track.title)
                                 .font(.subheadline)
                                 .fontWeight(.medium)
                                 .lineLimit(1)
-                            Text(track.albumArtistName.isEmpty ? String(localized: "library.unknown_artist") : track.albumArtistName)
+                            Text(track.artistName)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                                 .lineLimit(1)
@@ -145,7 +137,7 @@ struct FloatingMiniPlayer: View {
             HStack(spacing: 16) {
                 // Album art
                 Group {
-                    if let artworkImage = artworkImage(for: viewModel.currentTrack) {
+                    if let artworkImage = viewModel.currentTrack?.artworkImage {
                         #if os(macOS)
                         Image(nsImage: artworkImage)
                             .resizable()
@@ -171,10 +163,10 @@ struct FloatingMiniPlayer: View {
                 // Track info
                 if let track = viewModel.currentTrack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(track.title.isEmpty ? String(localized: "library.unknown_track") : track.title)
+                        Text(track.title)
                             .font(.headline)
                             .lineLimit(1)
-                        Text(track.albumArtistName.isEmpty ? String(localized: "library.unknown_artist") : track.albumArtistName)
+                        Text(track.artistName)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .lineLimit(1)
@@ -275,11 +267,42 @@ fileprivate func artworkImage(for track: TrackViewData?) -> UIImage? {
 #endif
 
 #Preview("Populated - Compact") {
-    FloatingMiniPlayer(services: ServiceContainer.preview)
+    let services = ServiceContainer.preview
+    let playerViewModel = PlayerViewModel(
+        context: services.persistence.viewContext,
+        services: services
+    )
+
+    return FloatingMiniPlayer()
         .environment(\.horizontalSizeClass, .compact)
+        .environment(\.managedObjectContext, services.persistence.viewContext)
+        .environment(\.serviceContainer, services)
+        .environmentObject(playerViewModel)
 }
 
 #Preview("Populated - Regular") {
-    FloatingMiniPlayer(services: ServiceContainer.preview)
+    let services = ServiceContainer.preview
+    let playerViewModel = PlayerViewModel(
+        context: services.persistence.viewContext,
+        services: services
+    )
+
+    return FloatingMiniPlayer()
         .environment(\.horizontalSizeClass, .regular)
+        .environment(\.managedObjectContext, services.persistence.viewContext)
+        .environment(\.serviceContainer, services)
+        .environmentObject(playerViewModel)
+    let dependencies = PreviewFactory.makePreviewDependencies()
+    return FloatingMiniPlayer()
+        .environment(\.managedObjectContext, dependencies.services.persistence.viewContext)
+        .environment(\.horizontalSizeClass, .compact)
+        .environmentObject(dependencies.playerViewModel)
+}
+
+#Preview("Populated - Regular") {
+    let dependencies = PreviewFactory.makePreviewDependencies()
+    return FloatingMiniPlayer()
+        .environment(\.managedObjectContext, dependencies.services.persistence.viewContext)
+        .environment(\.horizontalSizeClass, .regular)
+        .environmentObject(dependencies.playerViewModel)
 }

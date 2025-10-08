@@ -28,6 +28,8 @@ struct PersistenceController {
     /// The persistent container for the Core Data stack
     let container: NSPersistentContainer
 
+    private let logger = AppLogger.persistence
+
     /// Main context for UI operations (runs on main queue)
     var viewContext: NSManagedObjectContext {
         container.viewContext
@@ -69,16 +71,16 @@ struct PersistenceController {
                  * The store could not be migrated to the current model version.
                  Check the error message to determine what the actual problem was.
                  */
-                print("❌ Core Data error: \(error)")
-                print("   Store: \(storeDescription)")
-                print("   User info: \(error.userInfo)")
+                logger.error("❌ Core Data error: \(error)")
+                logger.debug("   Store: \(storeDescription)")
+                logger.error("   User info: \(error.userInfo)")
 
                 // In production, you might want to handle this more gracefully
                 // For now, we'll just log it
             } else {
-                print("✅ Core Data loaded successfully")
+                logger.info("✅ Core Data loaded successfully")
                 if let url = storeDescription.url {
-                    print("   Store location: \(url.path)")
+                    logger.debug("   Store location: \(url.path)")
                 }
             }
         }
@@ -169,12 +171,12 @@ struct PersistenceController {
 
         do {
             try context.save()
-            print("✅ Context saved: \(context.name ?? "unnamed")")
+            logger.info("✅ Context saved: \(context.name ?? "unnamed")")
         } catch {
             let nsError = error as NSError
-            print("❌ Failed to save context: \(context.name ?? "unnamed")")
-            print("   Error: \(nsError)")
-            print("   User info: \(nsError.userInfo)")
+            logger.error("❌ Failed to save context: \(context.name ?? "unnamed")")
+            logger.error("   Error: \(nsError)")
+            logger.error("   User info: \(nsError.userInfo)")
             throw error
         }
     }
@@ -246,24 +248,24 @@ struct PersistenceController {
     /// Handles Core Data errors with appropriate logging
     func handleError(_ error: Error, context: String) {
         let nsError = error as NSError
-        print("❌ Core Data error in \(context)")
-        print("   Domain: \(nsError.domain)")
-        print("   Code: \(nsError.code)")
-        print("   Description: \(nsError.localizedDescription)")
+        logger.error("❌ Core Data error in \(context)")
+        logger.error("   Domain: \(nsError.domain)")
+        logger.error("   Code: \(nsError.code)")
+        logger.error("   Description: \(nsError.localizedDescription)")
 
         if let detailed = nsError.userInfo[NSLocalizedFailureReasonErrorKey] as? String {
-            print("   Reason: \(detailed)")
+            logger.debug("   Reason: \(detailed)")
         }
 
         if let recovery = nsError.userInfo[NSLocalizedRecoverySuggestionErrorKey] as? String {
-            print("   Suggestion: \(recovery)")
+            logger.debug("   Suggestion: \(recovery)")
         }
 
         // Log affected objects if available
         if let affectedObjects = nsError.userInfo[NSAffectedObjectsErrorKey] as? [NSManagedObject] {
-            print("   Affected objects: \(affectedObjects.count)")
+            logger.debug("   Affected objects: \(affectedObjects.count)")
             for object in affectedObjects {
-                print("     - \(object)")
+                logger.debug("     - \(object)")
             }
         }
     }
@@ -272,23 +274,23 @@ struct PersistenceController {
 
     /// Prints statistics about the Core Data stack
     func printStatistics() {
-        print("📊 Core Data Statistics")
-        print("   View Context:")
-        print("     - Has changes: \(viewContext.hasChanges)")
-        print("     - Inserted: \(viewContext.insertedObjects.count)")
-        print("     - Updated: \(viewContext.updatedObjects.count)")
-        print("     - Deleted: \(viewContext.deletedObjects.count)")
+        logger.info("📊 Core Data Statistics")
+        logger.debug("   View Context:")
+        logger.debug("     - Has changes: \(viewContext.hasChanges)")
+        logger.debug("     - Inserted: \(viewContext.insertedObjects.count)")
+        logger.debug("     - Updated: \(viewContext.updatedObjects.count)")
+        logger.debug("     - Deleted: \(viewContext.deletedObjects.count)")
 
         if let storeCoordinator = container.persistentStoreCoordinator.persistentStores.first {
-            print("   Store:")
-            print("     - Type: \(storeCoordinator.type)")
+            logger.debug("   Store:")
+            logger.debug("     - Type: \(storeCoordinator.type)")
             if let url = storeCoordinator.url {
-                print("     - URL: \(url.path)")
+                logger.debug("     - URL: \(url.path)")
                 if let fileSize = try? FileManager.default.attributesOfItem(
                     atPath: url.path
                 )[.size] as? Int64 {
                     let formatter = ByteCountFormatter()
-                    print("     - Size: \(formatter.string(fromByteCount: fileSize))")
+                    logger.debug("     - Size: \(formatter.string(fromByteCount: fileSize))")
                 }
             }
         }
@@ -310,7 +312,7 @@ struct PersistenceController {
         try saveViewContext()
         viewContext.reset()
 
-        print("✅ Core Data stack reset")
+        logger.info("✅ Core Data stack reset")
     }
 
     // MARK: - Development
@@ -318,10 +320,10 @@ struct PersistenceController {
     /// Clears all application data (Core Data + files in Kanora directories)
     /// Only deletes files in ~/Music/Kanora/ - leaves other files untouched
     func clearAllData() throws {
-        print("🗑️ Starting clearAllData...")
+        logger.debug("🗑️ Starting clearAllData...")
 
         // 1. Delete all Core Data entities
-        print("📦 Deleting Core Data entities...")
+        logger.debug("📦 Deleting Core Data entities...")
         let entities = container.managedObjectModel.entities
         for entity in entities {
             guard let entityName = entity.name else { continue }
@@ -330,38 +332,38 @@ struct PersistenceController {
             let deleteRequest = NSBatchDeleteRequest(fetchRequest: fetchRequest)
 
             try viewContext.execute(deleteRequest)
-            print("   ✅ Deleted all \(entityName) records")
+            logger.info("   ✅ Deleted all \(entityName) records")
         }
 
         try saveViewContext()
         viewContext.reset()
 
         // 2. Delete files in Kanora directories
-        print("📁 Deleting Kanora files...")
+        logger.debug("📁 Deleting Kanora files...")
         let musicDirectory = FileManager.default.urls(for: .musicDirectory, in: .userDomainMask).first!
         let kanoraBaseURL = musicDirectory.appendingPathComponent("Kanora")
 
         if FileManager.default.fileExists(atPath: kanoraBaseURL.path) {
-            print("   📂 Removing: \(kanoraBaseURL.path)")
+            logger.debug("   📂 Removing: \(kanoraBaseURL.path)")
             try FileManager.default.removeItem(at: kanoraBaseURL)
-            print("   ✅ Kanora directory removed")
+            logger.info("   ✅ Kanora directory removed")
         } else {
-            print("   ℹ️ Kanora directory doesn't exist")
+            logger.info("   ℹ️ Kanora directory doesn't exist")
         }
 
         // 3. Clear UserDefaults (settings)
-        print("⚙️ Clearing UserDefaults...")
+        logger.debug("⚙️ Clearing UserDefaults...")
         if let bundleID = Bundle.main.bundleIdentifier {
             UserDefaults.standard.removePersistentDomain(forName: bundleID)
             UserDefaults.standard.synchronize()
-            print("   ✅ UserDefaults cleared")
+            logger.info("   ✅ UserDefaults cleared")
         }
 
         // 4. Recreate default user and library
-        print("🔄 Recreating default user and library...")
+        logger.debug("🔄 Recreating default user and library...")
         try createDefaultUserAndLibrary()
 
-        print("✅ All data cleared successfully")
+        logger.info("✅ All data cleared successfully")
     }
 
     /// Creates a default user and library for initial setup
@@ -389,6 +391,6 @@ struct PersistenceController {
         library.user = user
 
         try context.save()
-        print("   ✅ Created default user and library")
+        logger.info("   ✅ Created default user and library")
     }
 }

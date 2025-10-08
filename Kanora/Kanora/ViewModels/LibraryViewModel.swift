@@ -24,6 +24,7 @@ class LibraryViewModel: BaseViewModel {
     // MARK: - Private Properties
 
     private var currentUser: User?
+    private var libraryCache: [Library.ID: Library] = [:]
 
     // MARK: - Computed Properties
 
@@ -32,7 +33,7 @@ class LibraryViewModel: BaseViewModel {
     }
 
     var selectedLibraryName: String {
-        selectedLibrary?.name ?? "No Library Selected"
+        selectedLibrarySummary?.name ?? "No Library Selected"
     }
 
     // MARK: - Lifecycle
@@ -121,18 +122,26 @@ class LibraryViewModel: BaseViewModel {
 
             try services.libraryService.deleteLibrary(managedLibrary, in: context)
 
-            if let index = libraries.firstIndex(where: { $0.id == library.id }) {
-                libraries.remove(at: index)
-            }
+            libraries.removeAll(where: { $0.id == id })
+            libraryCache[id] = nil
 
-            if selectedLibrary?.id == library.id {
-                selectedLibrary = libraries.first
-                loadStatistics()
+            if selectedLibraryID == id {
+                if let first = libraries.first {
+                    selectLibrary(id: first.id)
+                } else {
+                    selectedLibraryID = nil
+                    statistics = nil
+                }
             }
         } catch {
             errorMessage = error.localizedDescription
             handleError(error, context: "Deleting library")
         }
+    }
+
+    /// Provides the managed library for a given identifier
+    func library(withID id: Library.ID) throws -> Library {
+        try requireLibrary(withID: id)
     }
 
     /// Scans the selected library for audio files
@@ -228,6 +237,7 @@ class LibraryViewModel: BaseViewModel {
 enum ViewModelError: LocalizedError {
     case userNotFound
     case libraryNotFound
+    case trackNotFound
     case invalidPath
 
     var errorDescription: String? {
@@ -236,6 +246,8 @@ enum ViewModelError: LocalizedError {
             return "User not found"
         case .libraryNotFound:
             return "Library not found"
+        case .trackNotFound:
+            return "Track not found"
         case .invalidPath:
             return "Invalid file path"
         }

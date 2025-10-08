@@ -10,12 +10,11 @@ import SwiftUI
 /// Routes navigation destinations to appropriate views
 struct ContentRouter: View {
     let destination: NavigationDestination
-    let services: ServiceContainer
+    @Environment(\.serviceContainer) private var services
     @ObservedObject var navigationState: NavigationState
 
-    init(destination: NavigationDestination, services: ServiceContainer, navigationState: NavigationState) {
+    init(destination: NavigationDestination, navigationState: NavigationState) {
         self.destination = destination
-        self.services = services
         self.navigationState = navigationState
     }
 
@@ -38,7 +37,7 @@ struct ContentRouter: View {
                 case .playlists:
                     PlaylistsView()
                 case .nowPlaying:
-                    NowPlayingView(services: services)
+                    NowPlayingView()
                 case .cdRipping:
                     PlaceholderView(
                         icon: "opticaldiscdrive",
@@ -103,21 +102,39 @@ struct PlaceholderView: View {
 }
 
 #Preview("Artists") {
-    let persistence = PersistenceController.preview
-    let services = ServiceContainer(persistence: persistence)
+    let services = ServiceContainer(persistence: PersistenceController(inMemory: true))
+    let playerViewModel = PlayerViewModel(
+        context: services.persistence.viewContext,
+        services: services
+    )
     let navigationState = NavigationState()
+    let playerViewModel = PlayerViewModel(
+        context: services.persistence.viewContext,
+        services: services
+    )
     return NavigationView {
-        ContentRouter(destination: .artists, services: services, navigationState: navigationState)
+        ContentRouter(destination: .artists, navigationState: navigationState)
     }
+    .environment(\.managedObjectContext, services.persistence.viewContext)
     .environmentObject(navigationState)
+    .environmentObject(playerViewModel)
 }
 
 #Preview("Placeholder") {
-    let persistence = PersistenceController.preview
-    let services = ServiceContainer(persistence: persistence)
+    let services = ServiceContainer(persistence: PersistenceController(inMemory: true))
+    let playerViewModel = PlayerViewModel(
+        context: services.persistence.viewContext,
+        services: services
+    )
     let navigationState = NavigationState()
+    let playerViewModel = PlayerViewModel(
+        context: services.persistence.viewContext,
+        services: services
+    )
     return NavigationView {
-        ContentRouter(destination: .cdRipping, services: services, navigationState: navigationState)
+        ContentRouter(destination: .cdRipping, navigationState: navigationState)
     }
+    .environment(\.managedObjectContext, services.persistence.viewContext)
     .environmentObject(navigationState)
+    .environmentObject(playerViewModel)
 }

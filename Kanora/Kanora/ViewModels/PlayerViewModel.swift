@@ -37,27 +37,17 @@ struct TrackViewData: Identifiable, Equatable {
 /// ViewModel for managing playback state and controls
 @MainActor
 class PlayerViewModel: BaseViewModel {
-    // MARK: - Shared Instance
-
-    private static var sharedInstance: PlayerViewModel?
-
-    static func shared(context: NSManagedObjectContext, services: ServiceContainer) -> PlayerViewModel {
-        if let existing = sharedInstance {
-            return existing
-        }
-        let instance = PlayerViewModel(context: context, services: services)
-        sharedInstance = instance
-        return instance
-    }
-
     // MARK: - Published Properties
 
     @Published var currentTrack: TrackViewData?
+    @Published var currentTrackID: Track.ID?
     @Published var currentTime: TimeInterval = 0
     @Published var duration: TimeInterval = 0
     @Published var volume: Float = 0.7
     @Published var isMuted: Bool = false
     @Published var isPlaying: Bool = false
+
+    private let logger = AppLogger.playerViewModel
 
     // MARK: - Computed Properties
 
@@ -71,8 +61,12 @@ class PlayerViewModel: BaseViewModel {
 
     // MARK: - Lifecycle
 
+    private var hasSubscribedToPlayerState = false
+
     override func onAppear() {
         super.onAppear()
+        guard !hasSubscribedToPlayerState else { return }
+        hasSubscribedToPlayerState = true
         subscribeToPlayerState()
     }
 
@@ -132,22 +126,27 @@ class PlayerViewModel: BaseViewModel {
 
     // MARK: - Private Methods
 
+    private var trackCache: [Track.ID: Track] = [:]
+
     private func subscribeToPlayerState() {
-        print("🔗 PlayerViewModel subscribing to player state")
+        logger.debug("🔗 PlayerViewModel subscribing to player state")
 
         // Subscribe to playback state changes
         services.audioPlayerService.statePublisher
             .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
-                print("🎵 Playback state changed: \(state)")
+                logger.info("🎵 Playback state changed: \(state)")
                 self?.isPlaying = state.isPlaying
 
                 // Update current track from service
                 if let currentTrack = self?.services.audioPlayerService.currentTrack {
-                    print("📀 Current track: \(currentTrack.title ?? "Unknown")")
-                    self?.updateCurrentTrack(with: currentTrack)
+                    logger.debug("📀 Current track: \(currentTrack.title ?? "Unknown")")
+                    self?.currentTrack = currentTrack
+                    self?.duration = currentTrack.duration
                 } else if state == .idle || state == .stopped {
-                    self?.updateCurrentTrack(with: nil)
+                    self?.currentTrack = nil
+                    self?.currentTrackID = nil
+                    self?.duration = 0
                 }
             }
             .store(in: &cancellables)
@@ -164,8 +163,7 @@ class PlayerViewModel: BaseViewModel {
         $currentTrack
             .compactMap { $0 }
             .sink { [weak self] track in
-                let displayTitle = track.title.isEmpty ? "Unknown" : track.title
-                print("📊 Track changed in ViewModel: \(displayTitle)")
+                logger.info("📊 Track changed in ViewModel: \(track.title ?? "Unknown")")
                 self?.duration = track.duration
             }
             .store(in: &cancellables)
