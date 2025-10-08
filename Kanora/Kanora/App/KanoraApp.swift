@@ -47,7 +47,7 @@ struct KanoraApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(services: services)
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
                 .environment(\.serviceContainer, services)
                 .environmentObject(playerViewModel)
