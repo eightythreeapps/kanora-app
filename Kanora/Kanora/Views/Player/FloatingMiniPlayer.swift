@@ -15,7 +15,7 @@ import UIKit
 struct FloatingMiniPlayer: View {
     @EnvironmentObject private var viewModel: PlayerViewModel
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @State private var isExpanded = false
+    @ThemeAccess private var theme
 
     var body: some View {
         Group {
@@ -33,8 +33,7 @@ struct FloatingMiniPlayer: View {
 
     private var compactPlayer: some View {
         VStack(spacing: 0) {
-            VStack(spacing: 8) {
-                // Progress bar
+            VStack(spacing: theme.spacing.xs) {
                 if viewModel.currentTrack != nil {
                     Slider(
                         value: $viewModel.currentTime,
@@ -44,89 +43,64 @@ struct FloatingMiniPlayer: View {
                             viewModel.seek(to: viewModel.currentTime)
                         }
                     }
-                    .accentColor(.primary)
-                    .padding(.horizontal)
+                    .disabled(viewModel.currentTrack == nil)
+                    .tint(theme.colors.accent)
+                    .padding(.horizontal, theme.spacing.md)
                 }
 
-                // Controls
-                HStack(spacing: 12) {
-                    // Album art
-                    Group {
-                        if let artworkImage = viewModel.currentTrack?.artworkImage {
-                            #if os(macOS)
-                            Image(nsImage: artworkImage)
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                            #else
-                            Image(uiImage: artworkImage)
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                            #endif
-                        } else {
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(Color.secondary.opacity(0.2))
-                                .overlay {
-                                    Image(systemName: "music.note")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                        }
-                    }
-                    .frame(width: 50, height: 50)
-                    .cornerRadius(4)
+                HStack(spacing: theme.spacing.sm) {
+                    albumArtwork(size: 50, cornerRadius: theme.effects.radiusSM)
 
-                    // Track info
                     if let track = viewModel.currentTrack {
-                        VStack(alignment: .leading, spacing: 2) {
+                        VStack(alignment: .leading, spacing: theme.spacing.xxxs) {
                             Text(track.title)
-                                .font(.subheadline)
-                                .fontWeight(.medium)
+                                .font(theme.typography.bodyMedium)
+                                .foregroundColor(theme.colors.textPrimary)
                                 .lineLimit(1)
+
                             Text(track.artistName)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                                .font(theme.typography.bodySmall)
+                                .foregroundColor(theme.colors.textSecondary)
                                 .lineLimit(1)
                         }
                     } else {
                         Text(L10n.Player.noTrackPlaying)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .themedSecondaryText()
+                            .lineLimit(1)
                     }
 
                     Spacer()
 
-                    // Playback controls
-                    HStack(spacing: 20) {
+                    HStack(spacing: theme.spacing.lg) {
                         Button(action: viewModel.skipToPrevious) {
                             Image(systemName: "backward.fill")
-                                .font(.title3)
+                                .font(theme.typography.titleSmall)
+                                .foregroundColor(theme.colors.textPrimary)
                         }
                         .buttonStyle(.plain)
                         .disabled(viewModel.currentTrack == nil)
 
                         Button(action: viewModel.togglePlayPause) {
                             Image(systemName: viewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                                .font(.largeTitle)
+                                .font(theme.typography.headlineMedium)
+                                .foregroundColor(theme.colors.accent)
                         }
                         .buttonStyle(.plain)
                         .disabled(viewModel.currentTrack == nil)
 
                         Button(action: viewModel.skipToNext) {
                             Image(systemName: "forward.fill")
-                                .font(.title3)
+                                .font(theme.typography.titleSmall)
+                                .foregroundColor(theme.colors.textPrimary)
                         }
                         .buttonStyle(.plain)
                         .disabled(viewModel.currentTrack == nil)
                     }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, theme.spacing.md)
             }
-            .padding(.vertical, 8)
-#if os(macOS)
-            .background(.ultraThinMaterial)
-#else
-            .background(.ultraThinMaterial)
-#endif
+            .padding(.vertical, theme.spacing.sm)
+            .background(theme.effects.materialThin)
         }
     }
 
@@ -134,72 +108,52 @@ struct FloatingMiniPlayer: View {
 
     private var regularPlayer: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 16) {
-                // Album art
-                Group {
-                    if let artworkImage = viewModel.currentTrack?.artworkImage {
-                        #if os(macOS)
-                        Image(nsImage: artworkImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                        #else
-                        Image(uiImage: artworkImage)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                        #endif
-                    } else {
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(Color.secondary.opacity(0.2))
-                            .overlay {
-                                Image(systemName: "music.note")
-                                    .font(.title3)
-                                    .foregroundColor(.secondary)
-                            }
-                    }
-                }
-                .frame(width: 60, height: 60)
-                .cornerRadius(6)
+            HStack(spacing: theme.spacing.md) {
+                albumArtwork(size: 60, cornerRadius: theme.effects.radiusMD)
 
-                // Track info
                 if let track = viewModel.currentTrack {
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: theme.spacing.xxxs) {
                         Text(track.title)
-                            .font(.headline)
+                            .font(theme.typography.titleSmall)
+                            .foregroundColor(theme.colors.textPrimary)
                             .lineLimit(1)
+
                         Text(track.artistName)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .font(theme.typography.bodySmall)
+                            .foregroundColor(theme.colors.textSecondary)
                             .lineLimit(1)
                     }
                 } else {
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: theme.spacing.xxxs) {
                         Text(L10n.Player.noTrackPlaying)
-                            .font(.headline)
-                            .foregroundColor(.secondary)
+                            .font(theme.typography.titleSmall)
+                            .foregroundColor(theme.colors.textSecondary)
                     }
                 }
 
                 Spacer()
 
-                // Playback controls
-                HStack(spacing: 16) {
+                HStack(spacing: theme.spacing.md) {
                     Button(action: viewModel.skipToPrevious) {
                         Image(systemName: "backward.fill")
-                            .font(.title3)
+                            .font(theme.typography.titleSmall)
+                            .foregroundColor(theme.colors.textPrimary)
                     }
                     .buttonStyle(.plain)
                     .disabled(viewModel.currentTrack == nil)
 
                     Button(action: viewModel.togglePlayPause) {
                         Image(systemName: viewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                            .font(.system(size: 36))
+                            .font(theme.typography.headlineMedium)
+                            .foregroundColor(theme.colors.accent)
                     }
                     .buttonStyle(.plain)
                     .disabled(viewModel.currentTrack == nil)
 
                     Button(action: viewModel.skipToNext) {
                         Image(systemName: "forward.fill")
-                            .font(.title3)
+                            .font(theme.typography.titleSmall)
+                            .foregroundColor(theme.colors.textPrimary)
                     }
                     .buttonStyle(.plain)
                     .disabled(viewModel.currentTrack == nil)
@@ -207,13 +161,12 @@ struct FloatingMiniPlayer: View {
 
                 Spacer()
 
-                // Progress and time
                 if viewModel.currentTrack != nil {
-                    VStack(spacing: 4) {
-                        HStack(spacing: 8) {
+                    VStack(spacing: theme.spacing.xs) {
+                        HStack(spacing: theme.spacing.xs) {
                             Text(viewModel.currentTimeFormatted)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                                .font(theme.typography.caption)
+                                .foregroundColor(theme.colors.textSecondary)
                                 .monospacedDigit()
 
                             Slider(
@@ -224,85 +177,80 @@ struct FloatingMiniPlayer: View {
                                     viewModel.seek(to: viewModel.currentTime)
                                 }
                             }
+                            .disabled(viewModel.currentTrack == nil)
+                            .tint(theme.colors.accent)
 
                             Text(viewModel.durationFormatted)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                                .font(theme.typography.caption)
+                                .foregroundColor(theme.colors.textSecondary)
                                 .monospacedDigit()
                         }
                     }
+                    .frame(maxWidth: 240)
                 }
 
-                // Volume control
-                HStack(spacing: 12) {
+                HStack(spacing: theme.spacing.xs) {
                     Button(action: viewModel.toggleMute) {
                         Image(systemName: viewModel.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                            .foregroundColor(theme.colors.textSecondary)
                     }
                     .buttonStyle(.plain)
-                    
+
                     Slider(value: $viewModel.volume, in: 0...1)
+                        .tint(theme.colors.accent)
                 }
                 .frame(maxWidth: 200)
             }
-            .padding()
-#if os(macOS)
-            .background(.ultraThinMaterial)
-#else
-            .background(.ultraThinMaterial)
-#endif
+            .padding(theme.spacing.md)
+            .background(theme.effects.materialThin)
         }
+    }
+
+    @ViewBuilder
+    private func albumArtwork(size: CGFloat, cornerRadius: CGFloat) -> some View {
+        Group {
+            if let artworkImage = viewModel.currentTrack?.artworkImage {
+                #if os(macOS)
+                Image(nsImage: artworkImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                #else
+                Image(uiImage: artworkImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                #endif
+            } else {
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .fill(theme.colors.surfaceSecondary.opacity(0.9))
+                    .overlay {
+                        Image(systemName: "music.note")
+                            .font(theme.typography.bodySmall)
+                            .foregroundColor(theme.colors.textSecondary)
+                    }
+            }
+        }
+        .frame(width: size, height: size)
+        .cornerRadius(cornerRadius)
+        .clipped()
     }
 }
 
-#if os(macOS)
-fileprivate func artworkImage(for track: TrackViewData?) -> NSImage? {
-    guard let path = track?.albumArtworkPath else { return nil }
-    return NSImage(contentsOfFile: path)
-}
-#else
-fileprivate func artworkImage(for track: TrackViewData?) -> UIImage? {
-    guard let path = track?.albumArtworkPath else { return nil }
-    return UIImage(contentsOfFile: path)
-}
-#endif
-
 #Preview("Populated - Compact") {
-    let services = ServiceContainer.preview
-    let playerViewModel = PlayerViewModel(
-        context: services.persistence.viewContext,
-        services: services
-    )
-
-    return FloatingMiniPlayer()
-        .environment(\.horizontalSizeClass, .compact)
-        .environment(\.managedObjectContext, services.persistence.viewContext)
-        .environment(\.serviceContainer, services)
-        .environmentObject(playerViewModel)
-}
-
-#Preview("Populated - Regular") {
-    let services = ServiceContainer.preview
-    let playerViewModel = PlayerViewModel(
-        context: services.persistence.viewContext,
-        services: services
-    )
-
-    return FloatingMiniPlayer()
-        .environment(\.horizontalSizeClass, .regular)
-        .environment(\.managedObjectContext, services.persistence.viewContext)
-        .environment(\.serviceContainer, services)
-        .environmentObject(playerViewModel)
     let dependencies = PreviewFactory.makePreviewDependencies()
     return FloatingMiniPlayer()
-        .environment(\.managedObjectContext, dependencies.services.persistence.viewContext)
         .environment(\.horizontalSizeClass, .compact)
+        .environment(\.managedObjectContext, dependencies.services.persistence.viewContext)
+        .environment(\.serviceContainer, dependencies.services)
         .environmentObject(dependencies.playerViewModel)
+        .designSystem()
 }
 
 #Preview("Populated - Regular") {
     let dependencies = PreviewFactory.makePreviewDependencies()
     return FloatingMiniPlayer()
-        .environment(\.managedObjectContext, dependencies.services.persistence.viewContext)
         .environment(\.horizontalSizeClass, .regular)
+        .environment(\.managedObjectContext, dependencies.services.persistence.viewContext)
+        .environment(\.serviceContainer, dependencies.services)
         .environmentObject(dependencies.playerViewModel)
+        .designSystem()
 }

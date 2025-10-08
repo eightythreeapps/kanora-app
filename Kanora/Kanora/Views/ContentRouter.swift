@@ -102,39 +102,27 @@ struct PlaceholderView: View {
 }
 
 #Preview("Artists") {
-    let services = ServiceContainer(persistence: PersistenceController(inMemory: true))
-    let playerViewModel = PlayerViewModel(
-        context: services.persistence.viewContext,
-        services: services
-    )
+    let dependencies = PreviewFactory.makePreviewDependencies()
     let navigationState = NavigationState()
-    let playerViewModel = PlayerViewModel(
-        context: services.persistence.viewContext,
-        services: services
-    )
     return NavigationView {
         ContentRouter(destination: .artists, navigationState: navigationState)
     }
-    .environment(\.managedObjectContext, services.persistence.viewContext)
+    .environment(\.managedObjectContext, dependencies.services.persistence.viewContext)
+    .environment(\.serviceContainer, dependencies.services)
     .environmentObject(navigationState)
-    .environmentObject(playerViewModel)
+    .environmentObject(dependencies.playerViewModel)
+    .designSystem()
 }
 
 #Preview("Placeholder") {
-    let services = ServiceContainer(persistence: PersistenceController(inMemory: true))
-    let playerViewModel = PlayerViewModel(
-        context: services.persistence.viewContext,
-        services: services
-    )
+    let dependencies = PreviewFactory.makePreviewDependencies()
     let navigationState = NavigationState()
-    let playerViewModel = PlayerViewModel(
-        context: services.persistence.viewContext,
-        services: services
-    )
     return NavigationView {
         ContentRouter(destination: .cdRipping, navigationState: navigationState)
     }
-    .environment(\.managedObjectContext, services.persistence.viewContext)
+    .environment(\.managedObjectContext, dependencies.services.persistence.viewContext)
+    .environment(\.serviceContainer, dependencies.services)
     .environmentObject(navigationState)
-    .environmentObject(playerViewModel)
+    .environmentObject(dependencies.playerViewModel)
+    .designSystem()
 }
