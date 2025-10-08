@@ -341,7 +341,8 @@ struct TrackRowView: View {
     }
 
     private var isCurrentTrack: Bool {
-        playerViewModel.currentTrack?.id == track.id
+        guard let trackID = track.id else { return false }
+        return playerViewModel.currentTrack?.id == trackID
     }
 
     private var isPlaying: Bool {
