@@ -17,6 +17,7 @@ final class LibraryViewModelTests: XCTestCase {
     var viewModel: LibraryViewModel!
     var container: ServiceContainer!
     var context: NSManagedObjectContext!
+    var testLibrary: Library!
     var cancellables: Set<AnyCancellable>!
 
     // MARK: - Setup & Teardown
@@ -42,6 +43,7 @@ final class LibraryViewModelTests: XCTestCase {
             user: user,
             context: context
         )
+        testLibrary = library
 
         try context.save()
 
@@ -60,6 +62,7 @@ final class LibraryViewModelTests: XCTestCase {
         viewModel = nil
         container = nil
         context = nil
+        testLibrary = nil
         try await super.tearDown()
     }
 
@@ -89,10 +92,11 @@ final class LibraryViewModelTests: XCTestCase {
         }
 
         // When
-        viewModel.selectLibrary(library)
+        viewModel.selectLibrary(id: library.id)
 
         // Then
-        XCTAssertEqual(viewModel.selectedLibrary?.id, library.id)
+        XCTAssertEqual(viewModel.selectedLibraryID, library.id)
+        XCTAssertEqual(viewModel.selectedLibrarySummary?.id, library.id)
         XCTAssertNotNil(viewModel.statistics)
     }
 
@@ -119,11 +123,11 @@ final class LibraryViewModelTests: XCTestCase {
         }
 
         // When
-        viewModel.deleteLibrary(library)
+        viewModel.deleteLibrary(id: library.id)
 
         // Then
         XCTAssertEqual(viewModel.libraries.count, 0)
-        XCTAssertNil(viewModel.selectedLibrary)
+        XCTAssertNil(viewModel.selectedLibraryID)
     }
 
     func testStatistics() async throws {
@@ -139,7 +143,7 @@ final class LibraryViewModelTests: XCTestCase {
         // Create test data
         let artist = Artist(
             name: "Test Artist",
-            library: library,
+            library: testLibrary,
             context: context
         )
         let album = Album(
@@ -159,7 +163,7 @@ final class LibraryViewModelTests: XCTestCase {
         try context.save()
 
         // When
-        viewModel.selectLibrary(library)
+        viewModel.selectLibrary(id: library.id)
 
         // Then
         XCTAssertNotNil(viewModel.statistics)
