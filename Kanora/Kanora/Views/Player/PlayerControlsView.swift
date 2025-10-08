@@ -36,6 +36,9 @@ struct PlayerControlsView: View {
                                 .foregroundStyle(theme.colors.textSecondary)
                         }
                     }
+                }
+                .frame(width: 50, height: 50)
+                .cornerRadius(4)
 
                 if let track = viewModel.currentTrack {
                     VStack(alignment: .leading, spacing: theme.spacing.xxxs) {

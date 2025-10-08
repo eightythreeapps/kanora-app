@@ -11,17 +11,9 @@ import AppKit
 #endif
 
 struct FloatingMiniPlayer: View {
-    @StateObject private var viewModel: PlayerViewModel
+    @EnvironmentObject private var viewModel: PlayerViewModel
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var isExpanded = false
-
-    init(services: ServiceContainer) {
-        // Use shared PlayerViewModel instance
-        _viewModel = StateObject(wrappedValue: PlayerViewModel.shared(
-            context: services.persistence.viewContext,
-            services: services
-        ))
-    }
 
     var body: some View {
         Group {
@@ -58,7 +50,7 @@ struct FloatingMiniPlayer: View {
                 HStack(spacing: 12) {
                     // Album art
                     Group {
-                        if let artworkImage = viewModel.currentTrack?.album?.artworkImage {
+                        if let artworkImage = viewModel.currentTrack?.artworkImage {
                             #if os(macOS)
                             Image(nsImage: artworkImage)
                                 .resizable()
@@ -84,11 +76,11 @@ struct FloatingMiniPlayer: View {
                     // Track info
                     if let track = viewModel.currentTrack {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(track.title ?? String(localized: "library.unknown_track"))
+                            Text(track.title)
                                 .font(.subheadline)
                                 .fontWeight(.medium)
                                 .lineLimit(1)
-                            Text(track.album?.artist?.name ?? String(localized: "library.unknown_artist"))
+                            Text(track.artistName)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                                 .lineLimit(1)
@@ -143,7 +135,7 @@ struct FloatingMiniPlayer: View {
             HStack(spacing: 16) {
                 // Album art
                 Group {
-                    if let artworkImage = viewModel.currentTrack?.album?.artworkImage {
+                    if let artworkImage = viewModel.currentTrack?.artworkImage {
                         #if os(macOS)
                         Image(nsImage: artworkImage)
                             .resizable()
@@ -169,10 +161,10 @@ struct FloatingMiniPlayer: View {
                 // Track info
                 if let track = viewModel.currentTrack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(track.title ?? String(localized: "library.unknown_track"))
+                        Text(track.title)
                             .font(.headline)
                             .lineLimit(1)
-                        Text(track.album?.artist?.name ?? String(localized: "library.unknown_artist"))
+                        Text(track.artistName)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .lineLimit(1)
@@ -261,11 +253,17 @@ struct FloatingMiniPlayer: View {
 }
 
 #Preview("Populated - Compact") {
-    FloatingMiniPlayer(services: ServiceContainer.preview)
+    let dependencies = PreviewFactory.makePreviewDependencies()
+    return FloatingMiniPlayer()
+        .environment(\.managedObjectContext, dependencies.services.persistence.viewContext)
         .environment(\.horizontalSizeClass, .compact)
+        .environmentObject(dependencies.playerViewModel)
 }
 
 #Preview("Populated - Regular") {
-    FloatingMiniPlayer(services: ServiceContainer.preview)
+    let dependencies = PreviewFactory.makePreviewDependencies()
+    return FloatingMiniPlayer()
+        .environment(\.managedObjectContext, dependencies.services.persistence.viewContext)
         .environment(\.horizontalSizeClass, .regular)
+        .environmentObject(dependencies.playerViewModel)
 }

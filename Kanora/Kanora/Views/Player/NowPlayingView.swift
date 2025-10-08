@@ -11,14 +11,7 @@ import AppKit
 #endif
 
 struct NowPlayingView: View {
-    @StateObject private var viewModel: PlayerViewModel
-
-    init(services: ServiceContainer) {
-        _viewModel = StateObject(wrappedValue: PlayerViewModel(
-            context: services.persistence.viewContext,
-            services: services
-        ))
-    }
+    @EnvironmentObject private var viewModel: PlayerViewModel
 
     var body: some View {
         GeometryReader { geometry in
@@ -46,7 +39,7 @@ struct NowPlayingView: View {
         VStack(spacing: isCompact ? 16 : 32) {
             if let track = viewModel.currentTrack {
                 // Album artwork
-                albumArtwork(geometry: geometry, isCompact: isCompact)
+                albumArtwork(for: track, geometry: geometry, isCompact: isCompact)
                     .padding(.top, isCompact ? 20 : 40)
 
                 // Track info
@@ -71,12 +64,12 @@ struct NowPlayingView: View {
         .padding(.horizontal, isCompact ? 20 : 60)
     }
 
-    private func albumArtwork(geometry: GeometryProxy, isCompact: Bool) -> some View {
+    private func albumArtwork(for track: TrackViewData, geometry: GeometryProxy, isCompact: Bool) -> some View {
         let maxSize: CGFloat = isCompact ? min(geometry.size.width - 40, 250) : min(geometry.size.width * 0.5, 400)
         let artworkSize = min(maxSize, geometry.size.height * 0.4)
 
         return Group {
-            if let artworkImage = viewModel.currentTrack?.album?.artworkImage {
+            if let artworkImage = track.artworkImage {
                 #if os(macOS)
                 Image(nsImage: artworkImage)
                     .resizable()
@@ -102,18 +95,18 @@ struct NowPlayingView: View {
         .shadow(radius: 20, y: 10)
     }
 
-    private func trackInfo(_ track: Track) -> some View {
+    private func trackInfo(_ track: TrackViewData) -> some View {
         VStack(spacing: 8) {
-            Text(track.title ?? String(localized: "library.unknown_track"))
+            Text(track.title)
                 .font(.system(size: 32, weight: .bold))
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
 
-            Text(track.album?.artist?.name ?? String(localized: "library.unknown_artist"))
+            Text(track.artistName)
                 .font(.system(size: 20, weight: .medium))
                 .foregroundColor(.secondary)
 
-            Text(track.album?.title ?? String(localized: "library.unknown_album"))
+            Text(track.albumTitle)
                 .font(.system(size: 16))
                 .foregroundColor(.secondary)
         }

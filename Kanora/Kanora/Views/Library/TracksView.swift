@@ -187,27 +187,13 @@ struct TracksView: View {
     var body: some View {
         VStack(spacing: 0) {
 #if os(macOS)
-            // Search bar
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
-                TextField(L10n.Library.searchTracks, text: $searchText)
-                    .textFieldStyle(.plain)
-                if !searchText.isEmpty {
-                    Button(action: { searchText = "" }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-    #if os(macOS)
-            .background(Color(nsColor: .textBackgroundColor).opacity(0.5))
-    #else
-            .background(Color(uiColor: .secondarySystemBackground).opacity(0.5))
-    #endif
-            .cornerRadius(8)
-            .padding()
+            LibrarySearchBar(
+                placeholder: L10n.Library.searchTracks,
+                text: $searchText,
+                accessibilityLabel: L10n.Library.searchTracks,
+                textFieldIdentifier: "tracks-search-field",
+                clearButtonIdentifier: "tracks-search-clear"
+            )
 #endif
 
             // Tracks list

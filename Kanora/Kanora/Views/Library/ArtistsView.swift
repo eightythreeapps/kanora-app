@@ -47,30 +47,13 @@ struct ArtistsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Search bar
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(theme.colors.textSecondary)
-
-                TextField(L10n.Library.searchArtists, text: $searchText)
-                    .textFieldStyle(.plain)
-                    .font(theme.typography.bodyMedium)
-
-                if !searchText.isEmpty {
-                    Button(action: { searchText = "" }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(theme.colors.textSecondary)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(theme.spacing.xs)
-            .background(
-                RoundedRectangle(cornerRadius: theme.effects.radiusMD)
-                    .fill(theme.colors.surfaceSecondary.opacity(0.8))
+            LibrarySearchBar(
+                placeholder: L10n.Library.searchArtists,
+                text: $searchText,
+                accessibilityLabel: L10n.Library.searchArtists,
+                textFieldIdentifier: "artists-search-field",
+                clearButtonIdentifier: "artists-search-clear"
             )
-            .padding(.horizontal, theme.spacing.md)
-            .padding(.top, theme.spacing.md)
 
             // Artists grid
             if filteredArtists.isEmpty {
