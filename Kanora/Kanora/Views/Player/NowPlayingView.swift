@@ -14,6 +14,7 @@ import UIKit
 
 struct NowPlayingView: View {
     @EnvironmentObject private var viewModel: PlayerViewModel
+    @ThemeAccess private var theme
 
     var body: some View {
         GeometryReader { geometry in
@@ -38,11 +39,11 @@ struct NowPlayingView: View {
     // MARK: - Main Content
 
     private func mainContent(isCompact: Bool, geometry: GeometryProxy) -> some View {
-        VStack(spacing: isCompact ? 16 : 32) {
+        VStack(spacing: isCompact ? theme.spacing.lg : theme.spacing.xxxl) {
             if let track = viewModel.currentTrack {
                 // Album artwork
                 albumArtwork(for: track, geometry: geometry, isCompact: isCompact)
-                    .padding(.top, isCompact ? 20 : 40)
+                    .padding(.top, isCompact ? theme.spacing.xl : theme.spacing.xxxl)
 
                 // Track info
                 trackInfo(track)
@@ -63,7 +64,7 @@ struct NowPlayingView: View {
 
             Spacer()
         }
-        .padding(.horizontal, isCompact ? 20 : 60)
+        .padding(.horizontal, isCompact ? theme.spacing.contentPadding : theme.spacing.xxxl)
     }
 
     private func albumArtwork(for track: TrackViewData, geometry: GeometryProxy, isCompact: Bool) -> some View {
@@ -82,41 +83,49 @@ struct NowPlayingView: View {
                     .aspectRatio(contentMode: .fill)
                 #endif
             } else {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.secondary.opacity(0.2))
+                RoundedRectangle(cornerRadius: theme.effects.radiusXL)
+                    .fill(theme.colors.surfaceSecondary)
                     .overlay {
                         Image(systemName: "music.note")
-                            .font(.system(size: artworkSize * 0.3))
-                            .foregroundColor(.secondary.opacity(0.5))
+                            .font(theme.typography.headlineSmall)
+                            .foregroundColor(theme.colors.textSecondary.opacity(0.5))
                     }
             }
         }
         .frame(width: artworkSize, height: artworkSize)
-        .cornerRadius(12)
+        .cornerRadius(theme.effects.radiusXL)
         .clipped()
-        .shadow(radius: 20, y: 10)
+        .shadow(
+            color: theme.effects.shadowLarge.color,
+            radius: theme.effects.shadowLarge.radius,
+            x: theme.effects.shadowLarge.x,
+            y: theme.effects.shadowLarge.y
+        )
     }
 
     private func trackInfo(_ track: TrackViewData) -> some View {
-        VStack(spacing: 8) {
-            Text(track.title ?? L10n.Library.unknownTrackName)
-                .font(.system(size: 32, weight: .bold))
+        VStack(spacing: theme.spacing.xs) {
+            Text(track.title)
+                .font(theme.typography.headlineMedium)
+                .foregroundColor(theme.colors.textPrimary)
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
 
-            Text(track.album?.artist?.name ?? L10n.Library.unknownArtistName)
-                .font(.system(size: 20, weight: .medium))
-                .foregroundColor(.secondary)
+            Text(track.artistName)
+                .font(theme.typography.titleMedium)
+                .foregroundColor(theme.colors.textSecondary)
+                .multilineTextAlignment(.center)
 
-            Text(track.album?.title ?? L10n.Library.unknownAlbumName)
-                .font(.system(size: 16))
-                .foregroundColor(.secondary)
+            Text(track.albumTitle)
+                .font(theme.typography.bodyMedium)
+                .foregroundColor(theme.colors.textSecondary)
+                .multilineTextAlignment(.center)
         }
-        .padding(.horizontal, 40)
+        .padding(.horizontal, theme.spacing.xxxl)
     }
 
     private func progressBar(isCompact: Bool) -> some View {
-        VStack(spacing: 12) {
+        VStack(spacing: theme.spacing.xs) {
             // Time slider
             Slider(
                 value: $viewModel.currentTime,
@@ -126,32 +135,34 @@ struct NowPlayingView: View {
                     viewModel.seek(to: viewModel.currentTime)
                 }
             }
-            .accentColor(.primary)
+            .disabled(viewModel.currentTrack == nil)
+            .tint(theme.colors.accent)
 
             // Time labels
             HStack {
                 Text(viewModel.currentTimeFormatted)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(theme.typography.bodySmall)
+                    .foregroundColor(theme.colors.textSecondary)
                     .monospacedDigit()
 
                 Spacer()
 
                 Text("-" + formatRemainingTime())
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(theme.typography.bodySmall)
+                    .foregroundColor(theme.colors.textSecondary)
                     .monospacedDigit()
             }
         }
-        .padding(.horizontal, isCompact ? 0 : 40)
+        .padding(.horizontal, isCompact ? 0 : theme.spacing.xxxl)
     }
 
     private var playbackControls: some View {
-        HStack(spacing: 40) {
+        HStack(spacing: theme.spacing.xxxl) {
             // Previous
             Button(action: viewModel.skipToPrevious) {
                 Image(systemName: "backward.fill")
-                    .font(.system(size: 36))
+                    .font(theme.typography.titleLarge)
+                    .foregroundColor(theme.colors.textPrimary)
             }
             .buttonStyle(.plain)
             .disabled(viewModel.currentTrack == nil)
@@ -160,7 +171,8 @@ struct NowPlayingView: View {
             // Play/Pause
             Button(action: viewModel.togglePlayPause) {
                 Image(systemName: viewModel.isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                    .font(.system(size: 80))
+                    .font(theme.typography.headlineLarge)
+                    .foregroundColor(theme.colors.accent)
             }
             .buttonStyle(.plain)
             .disabled(viewModel.currentTrack == nil)
@@ -169,93 +181,96 @@ struct NowPlayingView: View {
             // Next
             Button(action: viewModel.skipToNext) {
                 Image(systemName: "forward.fill")
-                    .font(.system(size: 36))
+                    .font(theme.typography.titleLarge)
+                    .foregroundColor(theme.colors.textPrimary)
             }
             .buttonStyle(.plain)
             .disabled(viewModel.currentTrack == nil)
             .help(L10n.Actions.next)
         }
-        .foregroundColor(.primary)
     }
 
     private var additionalControls: some View {
-        HStack(spacing: 60) {
+        HStack(spacing: theme.spacing.xxxl) {
             // Left side controls
-            HStack(spacing: 24) {
+            HStack(spacing: theme.spacing.lg) {
                 // Shuffle
                 Button(action: {}) {
                     Image(systemName: "shuffle")
-                        .font(.title3)
+                        .font(theme.typography.titleSmall)
+                        .foregroundColor(theme.colors.textSecondary)
                 }
                 .buttonStyle(.plain)
-                .foregroundColor(.secondary)
                 .help(L10n.Player.shuffleOff)
 
                 // Repeat
                 Button(action: {}) {
                     Image(systemName: "repeat")
-                        .font(.title3)
+                        .font(theme.typography.titleSmall)
+                        .foregroundColor(theme.colors.textSecondary)
                 }
                 .buttonStyle(.plain)
-                .foregroundColor(.secondary)
                 .help(L10n.Player.repeatOff)
             }
 
             Spacer()
 
             // Right side controls
-            HStack(spacing: 16) {
+            HStack(spacing: theme.spacing.md) {
                 // Queue
                 Button(action: {}) {
                     Image(systemName: "list.bullet")
-                        .font(.title3)
+                        .font(theme.typography.titleSmall)
+                        .foregroundColor(theme.colors.textSecondary)
                 }
                 .buttonStyle(.plain)
-                .foregroundColor(.secondary)
                 .help(L10n.Player.queue)
 
                 // Volume
-                HStack(spacing: 12) {
+                HStack(spacing: theme.spacing.xs) {
                     Button(action: viewModel.toggleMute) {
                         Image(systemName: viewModel.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                            .font(.title3)
+                            .font(theme.typography.titleSmall)
+                            .foregroundColor(theme.colors.textSecondary)
                     }
                     .buttonStyle(.plain)
-                    .foregroundColor(.secondary)
 
                     Slider(value: $viewModel.volume, in: 0...1)
-                        .accentColor(.secondary)
+                        .tint(theme.colors.accent)
                 }
             }
         }
-        .padding(.horizontal, 40)
+        .padding(.horizontal, theme.spacing.xxxl)
     }
 
     private var emptyState: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: theme.spacing.lg) {
             Image(systemName: "music.note")
-                .font(.system(size: 80))
-                .foregroundColor(.secondary.opacity(0.5))
+                .font(theme.typography.headlineLarge)
+                .foregroundColor(theme.colors.textSecondary.opacity(0.4))
 
             Text(L10n.Player.noTrackPlaying)
-                .font(.title2)
-                .foregroundColor(.secondary)
+                .font(theme.typography.titleLarge)
+                .foregroundColor(theme.colors.textSecondary)
 
             Text(L10n.Player.selectTrackToPlay)
-                .font(.body)
-                .foregroundColor(.secondary)
+                .font(theme.typography.bodyMedium)
+                .foregroundColor(theme.colors.textSecondary)
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(theme.spacing.xxxl)
     }
 
     // MARK: - Queue Sidebar
 
     private var queueSidebar: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: theme.spacing.md) {
             // Header
             Text(L10n.Player.upNext)
-                .font(.headline)
-                .padding(.horizontal)
+                .font(theme.typography.titleSmall)
+                .foregroundColor(theme.colors.textPrimary)
+                .padding(.horizontal, theme.spacing.md)
 
             Divider()
 
@@ -273,35 +288,31 @@ struct NowPlayingView: View {
 
             Spacer()
         }
-        .padding(.vertical)
-#if os(macOS)
-        .background(Color(nsColor: .windowBackgroundColor).opacity(0.5))
-#else
-        .background(Color(.secondarySystemBackground))
-#endif
+        .padding(.vertical, theme.spacing.lg)
+        .background(theme.colors.surfaceSecondary)
     }
 
     private func queueItem(title: String, artist: String) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: theme.spacing.sm) {
             // Mini artwork
-            RoundedRectangle(cornerRadius: 4)
-                .fill(Color.secondary.opacity(0.2))
+            RoundedRectangle(cornerRadius: theme.effects.radiusSM)
+                .fill(theme.colors.surface)
                 .aspectRatio(1, contentMode: .fit)
                 .overlay {
                     Image(systemName: "music.note")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.labelMedium)
+                        .foregroundColor(theme.colors.textSecondary)
                 }
 
             // Track info
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: theme.spacing.xxxs) {
                 Text(title)
-                    .font(.subheadline)
+                    .font(theme.typography.bodyMedium)
                     .lineLimit(1)
 
                 Text(artist)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(theme.typography.bodySmall)
+                    .foregroundColor(theme.colors.textSecondary)
                     .lineLimit(1)
             }
 
@@ -309,11 +320,11 @@ struct NowPlayingView: View {
 
             // Drag handle
             Image(systemName: "line.3.horizontal")
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .font(theme.typography.labelSmall)
+                .foregroundColor(theme.colors.textSecondary)
         }
-        .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.horizontal, theme.spacing.md)
+        .padding(.vertical, theme.spacing.xs)
         .contentShape(Rectangle())
         .onTapGesture {
             // Play this track
@@ -329,18 +340,6 @@ struct NowPlayingView: View {
         return String(format: "%d:%02d", minutes, seconds)
     }
 }
-
-#if os(macOS)
-fileprivate func artworkImage(for track: TrackViewData?) -> NSImage? {
-    guard let path = track?.albumArtworkPath else { return nil }
-    return NSImage(contentsOfFile: path)
-}
-#else
-fileprivate func artworkImage(for track: TrackViewData?) -> UIImage? {
-    guard let path = track?.albumArtworkPath else { return nil }
-    return UIImage(contentsOfFile: path)
-}
-#endif
 
 // MARK: - Previews
 

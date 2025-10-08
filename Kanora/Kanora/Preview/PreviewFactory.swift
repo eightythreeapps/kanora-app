@@ -72,11 +72,6 @@ struct PreviewFactory {
             context: context
         )
 
-        let playerViewModel = PlayerViewModel(
-            context: context,
-            services: services
-        )
-
         return ArtistDetailView(artist: artist)
             .environment(\.managedObjectContext, context)
             .environmentObject(playerViewModel)
@@ -111,11 +106,6 @@ struct PreviewFactory {
             ),
             year: 2024,
             context: context
-        )
-
-        let playerViewModel = PlayerViewModel(
-            context: context,
-            services: services
         )
 
         return AlbumDetailView(album: album)
