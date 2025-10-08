@@ -92,11 +92,11 @@ final class LibraryViewModelTests: XCTestCase {
         }
 
         // When
-        viewModel.selectLibrary(id: library.id)
+        viewModel.selectLibrary(library)
 
         // Then
         XCTAssertEqual(viewModel.selectedLibraryID, library.id)
-        XCTAssertEqual(viewModel.selectedLibrarySummary?.id, library.id)
+        XCTAssertEqual(viewModel.selectedLibrary?.id, library.id)
         XCTAssertNotNil(viewModel.statistics)
     }
 
@@ -123,7 +123,7 @@ final class LibraryViewModelTests: XCTestCase {
         }
 
         // When
-        viewModel.deleteLibrary(id: library.id)
+        viewModel.deleteLibrary(library)
 
         // Then
         XCTAssertEqual(viewModel.libraries.count, 0)
@@ -164,7 +164,7 @@ final class LibraryViewModelTests: XCTestCase {
         try context.save()
 
         // When
-        viewModel.selectLibrary(id: library.id)
+        viewModel.selectLibrary(library)
 
         // Then
         XCTAssertNotNil(viewModel.statistics)

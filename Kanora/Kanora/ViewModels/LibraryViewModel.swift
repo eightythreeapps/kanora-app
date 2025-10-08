@@ -16,6 +16,7 @@ class LibraryViewModel: BaseViewModel {
 
     @Published var libraries: [LibraryViewData] = []
     @Published var selectedLibrary: LibraryViewData?
+    @Published var selectedLibraryID: Library.ID?
     @Published var viewState: ViewState = .idle
     @Published var statistics: LibraryStatistics?
     @Published var scanProgress: ScanProgress?
@@ -24,7 +25,6 @@ class LibraryViewModel: BaseViewModel {
     // MARK: - Private Properties
 
     private var currentUser: User?
-    private var libraryCache: [Library.ID: Library] = [:]
 
     // MARK: - Computed Properties
 
@@ -66,9 +66,16 @@ class LibraryViewModel: BaseViewModel {
 
             libraries = fetchedLibraries.map { LibraryViewData(library: $0) }
 
+            if libraries.isEmpty {
+                selectedLibrary = nil
+                selectedLibraryID = nil
+                statistics = nil
+            }
+
             if let selected = selectedLibrary,
                let updatedSelection = libraries.first(where: { $0.id == selected.id }) {
                 selectedLibrary = updatedSelection
+                selectedLibraryID = updatedSelection.id
             }
 
             // Select first library if none selected
@@ -110,6 +117,7 @@ class LibraryViewModel: BaseViewModel {
     /// Selects a library and loads its statistics
     func selectLibrary(_ library: LibraryViewData) {
         selectedLibrary = library
+        selectedLibraryID = library.id
         loadStatistics()
     }
 
@@ -122,13 +130,13 @@ class LibraryViewModel: BaseViewModel {
 
             try services.libraryService.deleteLibrary(managedLibrary, in: context)
 
-            libraries.removeAll(where: { $0.id == id })
-            libraryCache[id] = nil
+            libraries.removeAll(where: { $0.id == library.id })
 
-            if selectedLibraryID == id {
+            if selectedLibrary?.id == library.id {
                 if let first = libraries.first {
-                    selectLibrary(id: first.id)
+                    selectLibrary(first)
                 } else {
+                    selectedLibrary = nil
                     selectedLibraryID = nil
                     statistics = nil
                 }
@@ -141,13 +149,17 @@ class LibraryViewModel: BaseViewModel {
 
     /// Provides the managed library for a given identifier
     func library(withID id: Library.ID) throws -> Library {
-        try requireLibrary(withID: id)
+        guard let library = fetchLibrary(with: id) else {
+            throw ViewModelError.libraryNotFound
+        }
+
+        return library
     }
 
     /// Scans the selected library for audio files
     func scanLibrary() {
         guard let library = selectedLibrary, let managedLibrary = fetchLibrary(with: library.id) else {
-            errorMessage = "No library selected"
+            errorMessage = L10n.Errors.noLibrarySelectedMessage
             return
         }
 
@@ -246,6 +258,8 @@ enum ViewModelError: LocalizedError {
             return L10n.Errors.noUserFoundMessage
         case .libraryNotFound:
             return L10n.Errors.libraryNotFoundMessage
+        case .trackNotFound:
+            return L10n.Errors.trackNotFoundMessage
         case .invalidPath:
             return L10n.Errors.invalidPathMessage
         }
