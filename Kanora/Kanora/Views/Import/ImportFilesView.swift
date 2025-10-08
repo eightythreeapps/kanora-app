@@ -43,9 +43,9 @@ struct ImportFilesView: View {
                         .font(.headline)
 
                     Picker("", selection: $viewModel.selectedLibrary) {
-                        ForEach(viewModel.availableLibraries, id: \.self) { library in
-                            Text(library.name ?? String(localized: "library.unknown"))
-                                .tag(library as Library?)
+                        ForEach(viewModel.availableLibraries) { library in
+                            Text(library.name.isEmpty ? String(localized: "library.unknown") : library.name)
+                                .tag(library as LibraryViewData?)
                         }
                     }
                     .pickerStyle(.menu)

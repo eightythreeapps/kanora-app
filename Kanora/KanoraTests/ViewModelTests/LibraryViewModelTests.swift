@@ -137,9 +137,10 @@ final class LibraryViewModelTests: XCTestCase {
         }
 
         // Create test data
+        let managedLibrary = try XCTUnwrap(fetchLibrary(with: library.id))
         let artist = Artist(
             name: "Test Artist",
-            library: library,
+            library: managedLibrary,
             context: context
         )
         let album = Album(
@@ -181,5 +182,20 @@ final class LibraryViewModelTests: XCTestCase {
 
         // Then loaded
         XCTAssertEqual(viewModel.viewState, .loaded)
+    }
+}
+
+private extension LibraryViewModelTests {
+    func fetchLibrary(with id: Library.ID) throws -> Library {
+        let request: NSFetchRequest<Library> = Library.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        request.fetchLimit = 1
+
+        let libraries = try context.fetch(request)
+        guard let library = libraries.first else {
+            XCTFail("Library with id \(id) not found")
+            throw NSError(domain: "LibraryViewModelTests", code: 0)
+        }
+        return library
     }
 }

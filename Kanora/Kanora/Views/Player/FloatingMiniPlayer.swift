@@ -8,6 +8,8 @@
 import SwiftUI
 #if os(macOS)
 import AppKit
+#else
+import UIKit
 #endif
 
 struct FloatingMiniPlayer: View {
@@ -58,7 +60,7 @@ struct FloatingMiniPlayer: View {
                 HStack(spacing: 12) {
                     // Album art
                     Group {
-                        if let artworkImage = viewModel.currentTrack?.album?.artworkImage {
+                        if let artworkImage = artworkImage(for: viewModel.currentTrack) {
                             #if os(macOS)
                             Image(nsImage: artworkImage)
                                 .resizable()
@@ -84,11 +86,11 @@ struct FloatingMiniPlayer: View {
                     // Track info
                     if let track = viewModel.currentTrack {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(track.title ?? String(localized: "library.unknown_track"))
+                            Text(track.title.isEmpty ? String(localized: "library.unknown_track") : track.title)
                                 .font(.subheadline)
                                 .fontWeight(.medium)
                                 .lineLimit(1)
-                            Text(track.album?.artist?.name ?? String(localized: "library.unknown_artist"))
+                            Text(track.albumArtistName.isEmpty ? String(localized: "library.unknown_artist") : track.albumArtistName)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                                 .lineLimit(1)
@@ -143,7 +145,7 @@ struct FloatingMiniPlayer: View {
             HStack(spacing: 16) {
                 // Album art
                 Group {
-                    if let artworkImage = viewModel.currentTrack?.album?.artworkImage {
+                    if let artworkImage = artworkImage(for: viewModel.currentTrack) {
                         #if os(macOS)
                         Image(nsImage: artworkImage)
                             .resizable()
@@ -169,10 +171,10 @@ struct FloatingMiniPlayer: View {
                 // Track info
                 if let track = viewModel.currentTrack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(track.title ?? String(localized: "library.unknown_track"))
+                        Text(track.title.isEmpty ? String(localized: "library.unknown_track") : track.title)
                             .font(.headline)
                             .lineLimit(1)
-                        Text(track.album?.artist?.name ?? String(localized: "library.unknown_artist"))
+                        Text(track.albumArtistName.isEmpty ? String(localized: "library.unknown_artist") : track.albumArtistName)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .lineLimit(1)
@@ -259,6 +261,18 @@ struct FloatingMiniPlayer: View {
         }
     }
 }
+
+#if os(macOS)
+fileprivate func artworkImage(for track: TrackViewData?) -> NSImage? {
+    guard let path = track?.albumArtworkPath else { return nil }
+    return NSImage(contentsOfFile: path)
+}
+#else
+fileprivate func artworkImage(for track: TrackViewData?) -> UIImage? {
+    guard let path = track?.albumArtworkPath else { return nil }
+    return UIImage(contentsOfFile: path)
+}
+#endif
 
 #Preview("Populated - Compact") {
     FloatingMiniPlayer(services: ServiceContainer.preview)

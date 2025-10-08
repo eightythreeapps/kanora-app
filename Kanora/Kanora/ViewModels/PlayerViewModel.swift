@@ -9,6 +9,31 @@ import Foundation
 import CoreData
 import Combine
 
+struct TrackViewData: Identifiable, Equatable {
+    let id: Track.ID
+    let title: String
+    let artistName: String
+    let albumTitle: String
+    let albumArtistName: String
+    let albumArtworkPath: String?
+    let duration: TimeInterval
+
+    init(track: Track) {
+        let identifier = track.id ?? UUID()
+        if track.id == nil {
+            track.id = identifier
+        }
+
+        self.id = identifier
+        self.title = track.title ?? ""
+        self.artistName = track.artistName
+        self.albumTitle = track.album?.title ?? ""
+        self.albumArtistName = track.album?.artist?.name ?? ""
+        self.albumArtworkPath = track.album?.artworkPath
+        self.duration = track.duration
+    }
+}
+
 /// ViewModel for managing playback state and controls
 @MainActor
 class PlayerViewModel: BaseViewModel {
@@ -27,7 +52,7 @@ class PlayerViewModel: BaseViewModel {
 
     // MARK: - Published Properties
 
-    @Published var currentTrack: Track?
+    @Published var currentTrack: TrackViewData?
     @Published var currentTime: TimeInterval = 0
     @Published var duration: TimeInterval = 0
     @Published var volume: Float = 0.7
@@ -71,7 +96,7 @@ class PlayerViewModel: BaseViewModel {
 
     func stop() {
         services.audioPlayerService.stop()
-        currentTrack = nil
+        updateCurrentTrack(with: nil)
         currentTime = 0
         duration = 0
         isPlaying = false
@@ -99,7 +124,7 @@ class PlayerViewModel: BaseViewModel {
     func playTrack(_ track: Track) {
         do {
             try services.audioPlayerService.play(track: track)
-            currentTrack = track
+            updateCurrentTrack(with: track)
         } catch {
             handleError(error, context: "Playing track")
         }
@@ -120,11 +145,9 @@ class PlayerViewModel: BaseViewModel {
                 // Update current track from service
                 if let currentTrack = self?.services.audioPlayerService.currentTrack {
                     print("📀 Current track: \(currentTrack.title ?? "Unknown")")
-                    self?.currentTrack = currentTrack
-                    self?.duration = currentTrack.duration
+                    self?.updateCurrentTrack(with: currentTrack)
                 } else if state == .idle || state == .stopped {
-                    self?.currentTrack = nil
-                    self?.duration = 0
+                    self?.updateCurrentTrack(with: nil)
                 }
             }
             .store(in: &cancellables)
@@ -141,7 +164,8 @@ class PlayerViewModel: BaseViewModel {
         $currentTrack
             .compactMap { $0 }
             .sink { [weak self] track in
-                print("📊 Track changed in ViewModel: \(track.title ?? "Unknown")")
+                let displayTitle = track.title.isEmpty ? "Unknown" : track.title
+                print("📊 Track changed in ViewModel: \(displayTitle)")
                 self?.duration = track.duration
             }
             .store(in: &cancellables)
@@ -162,5 +186,16 @@ class PlayerViewModel: BaseViewModel {
         let minutes = Int(time) / 60
         let seconds = Int(time) % 60
         return String(format: "%d:%02d", minutes, seconds)
+    }
+
+    private func updateCurrentTrack(with track: Track?) {
+        guard let track else {
+            currentTrack = nil
+            duration = 0
+            return
+        }
+
+        currentTrack = TrackViewData(track: track)
+        duration = track.duration
     }
 }

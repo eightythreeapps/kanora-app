@@ -15,8 +15,8 @@ class ImportViewModel: BaseViewModel {
     // MARK: - Published Properties
 
     @Published var viewState: ViewState = .idle
-    @Published var selectedLibrary: Library?
-    @Published var availableLibraries: [Library] = []
+    @Published var selectedLibrary: LibraryViewData?
+    @Published var availableLibraries: [LibraryViewData] = []
     @Published var importMode: ImportMode = .addToKanora
     @Published var importProgress: Double = 0.0
     @Published var currentFile: String?
@@ -62,7 +62,13 @@ class ImportViewModel: BaseViewModel {
             // Fetch all libraries
             let fetchRequest: NSFetchRequest<Library> = Library.fetchRequest()
             fetchRequest.sortDescriptors = [NSSortDescriptor(keyPath: \Library.name, ascending: true)]
-            availableLibraries = try context.fetch(fetchRequest)
+            let libraries = try context.fetch(fetchRequest)
+            availableLibraries = libraries.map { LibraryViewData(library: $0) }
+
+            if let selected = selectedLibrary,
+               let updatedSelection = availableLibraries.first(where: { $0.id == selected.id }) {
+                selectedLibrary = updatedSelection
+            }
 
             // Auto-select first library (default user and library are created by app init)
             if selectedLibrary == nil {
@@ -127,7 +133,8 @@ class ImportViewModel: BaseViewModel {
         print("📂 Import mode: \(importMode.displayName)")
         print("📚 Selected library: \(selectedLibrary?.name ?? "nil")")
 
-        guard let library = selectedLibrary else {
+        guard let libraryViewData = selectedLibrary,
+              let library = fetchLibrary(with: libraryViewData.id) else {
             print("❌ No library selected")
             viewState = .error("No library selected")
             return
@@ -267,5 +274,13 @@ class ImportViewModel: BaseViewModel {
         case .error(let message):
             return message
         }
+    }
+
+    private func fetchLibrary(with id: Library.ID) -> Library? {
+        let request: NSFetchRequest<Library> = Library.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        request.fetchLimit = 1
+
+        return try? context.fetch(request).first
     }
 }

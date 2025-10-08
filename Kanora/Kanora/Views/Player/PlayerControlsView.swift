@@ -38,10 +38,10 @@ struct PlayerControlsView: View {
 
                 if let track = viewModel.currentTrack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(track.title ?? String(localized: "library.unknown_track"))
+                        Text(track.title.isEmpty ? String(localized: "library.unknown_track") : track.title)
                             .font(.headline)
                             .lineLimit(1)
-                        Text(track.album?.artist?.name ?? String(localized: "library.unknown_artist"))
+                        Text(track.albumArtistName.isEmpty ? String(localized: "library.unknown_artist") : track.albumArtistName)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .lineLimit(1)

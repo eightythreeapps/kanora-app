@@ -8,6 +8,8 @@
 import SwiftUI
 #if os(macOS)
 import AppKit
+#else
+import UIKit
 #endif
 
 struct NowPlayingView: View {
@@ -76,7 +78,7 @@ struct NowPlayingView: View {
         let artworkSize = min(maxSize, geometry.size.height * 0.4)
 
         return Group {
-            if let artworkImage = viewModel.currentTrack?.album?.artworkImage {
+            if let artworkImage = artworkImage(for: viewModel.currentTrack) {
                 #if os(macOS)
                 Image(nsImage: artworkImage)
                     .resizable()
@@ -102,18 +104,18 @@ struct NowPlayingView: View {
         .shadow(radius: 20, y: 10)
     }
 
-    private func trackInfo(_ track: Track) -> some View {
+    private func trackInfo(_ track: TrackViewData) -> some View {
         VStack(spacing: 8) {
-            Text(track.title ?? String(localized: "library.unknown_track"))
+            Text(track.title.isEmpty ? String(localized: "library.unknown_track") : track.title)
                 .font(.system(size: 32, weight: .bold))
                 .lineLimit(2)
                 .multilineTextAlignment(.center)
 
-            Text(track.album?.artist?.name ?? String(localized: "library.unknown_artist"))
+            Text(track.albumArtistName.isEmpty ? String(localized: "library.unknown_artist") : track.albumArtistName)
                 .font(.system(size: 20, weight: .medium))
                 .foregroundColor(.secondary)
 
-            Text(track.album?.title ?? String(localized: "library.unknown_album"))
+            Text(track.albumTitle.isEmpty ? String(localized: "library.unknown_album") : track.albumTitle)
                 .font(.system(size: 16))
                 .foregroundColor(.secondary)
         }
@@ -331,6 +333,18 @@ struct NowPlayingView: View {
         return String(format: "%d:%02d", minutes, seconds)
     }
 }
+
+#if os(macOS)
+fileprivate func artworkImage(for track: TrackViewData?) -> NSImage? {
+    guard let path = track?.albumArtworkPath else { return nil }
+    return NSImage(contentsOfFile: path)
+}
+#else
+fileprivate func artworkImage(for track: TrackViewData?) -> UIImage? {
+    guard let path = track?.albumArtworkPath else { return nil }
+    return UIImage(contentsOfFile: path)
+}
+#endif
 
 // MARK: - Previews
 

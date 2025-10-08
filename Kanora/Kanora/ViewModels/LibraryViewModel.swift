@@ -14,8 +14,8 @@ import Combine
 class LibraryViewModel: BaseViewModel {
     // MARK: - Published Properties
 
-    @Published var libraries: [Library] = []
-    @Published var selectedLibrary: Library?
+    @Published var libraries: [LibraryViewData] = []
+    @Published var selectedLibrary: LibraryViewData?
     @Published var viewState: ViewState = .idle
     @Published var statistics: LibraryStatistics?
     @Published var scanProgress: ScanProgress?
@@ -58,10 +58,17 @@ class LibraryViewModel: BaseViewModel {
                 throw ViewModelError.userNotFound
             }
 
-            libraries = try services.libraryService.fetchLibraries(
+            let fetchedLibraries = try services.libraryService.fetchLibraries(
                 for: user,
                 in: context
             )
+
+            libraries = fetchedLibraries.map { LibraryViewData(library: $0) }
+
+            if let selected = selectedLibrary,
+               let updatedSelection = libraries.first(where: { $0.id == selected.id }) {
+                selectedLibrary = updatedSelection
+            }
 
             // Select first library if none selected
             if selectedLibrary == nil, let first = libraries.first {
@@ -90,8 +97,9 @@ class LibraryViewModel: BaseViewModel {
                 in: context
             )
 
-            libraries.append(library)
-            selectLibrary(library)
+            let viewData = LibraryViewData(library: library)
+            libraries.append(viewData)
+            selectLibrary(viewData)
         } catch {
             errorMessage = error.localizedDescription
             handleError(error, context: "Creating library")
@@ -99,15 +107,19 @@ class LibraryViewModel: BaseViewModel {
     }
 
     /// Selects a library and loads its statistics
-    func selectLibrary(_ library: Library) {
+    func selectLibrary(_ library: LibraryViewData) {
         selectedLibrary = library
         loadStatistics()
     }
 
     /// Deletes a library
-    func deleteLibrary(_ library: Library) {
+    func deleteLibrary(_ library: LibraryViewData) {
         do {
-            try services.libraryService.deleteLibrary(library, in: context)
+            guard let managedLibrary = fetchLibrary(with: library.id) else {
+                throw ViewModelError.libraryNotFound
+            }
+
+            try services.libraryService.deleteLibrary(managedLibrary, in: context)
 
             if let index = libraries.firstIndex(where: { $0.id == library.id }) {
                 libraries.remove(at: index)
@@ -125,7 +137,7 @@ class LibraryViewModel: BaseViewModel {
 
     /// Scans the selected library for audio files
     func scanLibrary() {
-        guard let library = selectedLibrary else {
+        guard let library = selectedLibrary, let managedLibrary = fetchLibrary(with: library.id) else {
             errorMessage = "No library selected"
             return
         }
@@ -133,7 +145,7 @@ class LibraryViewModel: BaseViewModel {
         viewState = .loading
 
         services.libraryService.scanLibrary(
-            library,
+            managedLibrary,
             in: context,
             progressHandler: { [weak self] progress in
                 self?.scanProgress = ScanProgress(
@@ -171,13 +183,13 @@ class LibraryViewModel: BaseViewModel {
 
     /// Loads statistics for the selected library
     func loadStatistics() {
-        guard let library = selectedLibrary else {
+        guard let library = selectedLibrary, let managedLibrary = fetchLibrary(with: library.id) else {
             statistics = nil
             return
         }
 
         statistics = services.libraryService.getLibraryStatistics(
-            for: library,
+            for: managedLibrary,
             in: context
         )
     }
@@ -200,6 +212,14 @@ class LibraryViewModel: BaseViewModel {
 
         save()
         return user
+    }
+
+    private func fetchLibrary(with id: Library.ID) -> Library? {
+        let request: NSFetchRequest<Library> = Library.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        request.fetchLimit = 1
+
+        return try? context.fetch(request).first
     }
 }
 
