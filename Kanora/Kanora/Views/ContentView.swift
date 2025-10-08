@@ -12,12 +12,11 @@ import Combine
 struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @Environment(\.serviceContainer) private var services
     @StateObject private var navigationState = NavigationState()
     @StateObject private var playerViewModel: PlayerViewModel
     private let services: ServiceContainer
 
-    init(services: ServiceContainer = .shared) {
+    init(services: ServiceContainer) {
         self._playerViewModel = StateObject(wrappedValue: PlayerViewModel(
             context: services.persistence.viewContext,
             services: services
