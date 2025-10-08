@@ -11,14 +11,7 @@ import AppKit
 #endif
 
 struct NowPlayingView: View {
-    @StateObject private var viewModel: PlayerViewModel
-
-    init(services: ServiceContainer) {
-        _viewModel = StateObject(wrappedValue: PlayerViewModel(
-            context: services.persistence.viewContext,
-            services: services
-        ))
-    }
+    @EnvironmentObject private var viewModel: PlayerViewModel
 
     var body: some View {
         GeometryReader { geometry in

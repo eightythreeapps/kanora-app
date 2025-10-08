@@ -314,16 +314,7 @@ struct AlbumDetailView: View {
 
 struct TrackRowView: View {
     let track: Track
-    @StateObject private var playerViewModel: PlayerViewModel
-    private let services = ServiceContainer.shared
-
-    init(track: Track) {
-        self.track = track
-        _playerViewModel = StateObject(wrappedValue: PlayerViewModel.shared(
-            context: ServiceContainer.shared.persistence.viewContext,
-            services: ServiceContainer.shared
-        ))
-    }
+    @EnvironmentObject private var playerViewModel: PlayerViewModel
 
     private var isCurrentTrack: Bool {
         guard let trackID = track.id else { return false }
