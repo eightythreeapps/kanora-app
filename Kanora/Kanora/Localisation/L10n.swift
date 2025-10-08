@@ -230,6 +230,7 @@ enum L10n {
         static let noLibrarySelected = LocalizedStringKey("errors.no_library_selected")
         static let failedToLoadLibraries = LocalizedStringKey("errors.failed_to_load_libraries")
         static let libraryNotFound = LocalizedStringKey("errors.library_not_found")
+        static let trackNotFound = LocalizedStringKey("errors.track_not_found")
         static let invalidPath = LocalizedStringKey("errors.invalid_path")
 
         static var noUserFoundMessage: String {
@@ -246,6 +247,10 @@ enum L10n {
 
         static var libraryNotFoundMessage: String {
             L10n.localizedString(forKey: "errors.library_not_found")
+        }
+
+        static var trackNotFoundMessage: String {
+            L10n.localizedString(forKey: "errors.track_not_found")
         }
 
         static var invalidPathMessage: String {
