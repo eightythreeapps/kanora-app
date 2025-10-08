@@ -8,6 +8,8 @@
 import SwiftUI
 #if os(macOS)
 import AppKit
+#else
+import UIKit
 #endif
 
 struct NowPlayingView: View {
@@ -324,6 +326,18 @@ struct NowPlayingView: View {
         return String(format: "%d:%02d", minutes, seconds)
     }
 }
+
+#if os(macOS)
+fileprivate func artworkImage(for track: TrackViewData?) -> NSImage? {
+    guard let path = track?.albumArtworkPath else { return nil }
+    return NSImage(contentsOfFile: path)
+}
+#else
+fileprivate func artworkImage(for track: TrackViewData?) -> UIImage? {
+    guard let path = track?.albumArtworkPath else { return nil }
+    return UIImage(contentsOfFile: path)
+}
+#endif
 
 // MARK: - Previews
 

@@ -8,6 +8,8 @@
 import SwiftUI
 #if os(macOS)
 import AppKit
+#else
+import UIKit
 #endif
 
 struct FloatingMiniPlayer: View {
@@ -251,6 +253,18 @@ struct FloatingMiniPlayer: View {
         }
     }
 }
+
+#if os(macOS)
+fileprivate func artworkImage(for track: TrackViewData?) -> NSImage? {
+    guard let path = track?.albumArtworkPath else { return nil }
+    return NSImage(contentsOfFile: path)
+}
+#else
+fileprivate func artworkImage(for track: TrackViewData?) -> UIImage? {
+    guard let path = track?.albumArtworkPath else { return nil }
+    return UIImage(contentsOfFile: path)
+}
+#endif
 
 #Preview("Populated - Compact") {
     let services = ServiceContainer.preview
