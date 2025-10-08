@@ -1143,6 +1143,51 @@
         }
       }
     },
+    "import.error.no_directory_selected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No directory selected"
+          }
+        }
+      }
+    },
+    "import.error.no_files_selected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No files selected"
+          }
+        }
+      }
+    },
+    "import.success %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld file imported successfully"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld files imported successfully"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "import.no_library_selected" : {
       "extractionState" : "manual",
       "localizations" : {

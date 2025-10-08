@@ -33,6 +33,10 @@ class ImportViewModel: BaseViewModel {
 
     // MARK: - Computed Properties
 
+    private var selectedLibraryID: Library.ID? {
+        selectedLibrary?.id
+    }
+
     var canImport: Bool {
         !selectedFiles.isEmpty && selectedLibraryID != nil && viewState != .loading
     }
@@ -69,16 +73,13 @@ class ImportViewModel: BaseViewModel {
             let libraries = try context.fetch(fetchRequest)
             availableLibraries = libraries.map { LibraryViewData(library: $0) }
 
-            if let selected = selectedLibrary,
-               let updatedSelection = availableLibraries.first(where: { $0.id == selected.id }) {
-                selectedLibrary = updatedSelection
-            }
+            let previouslySelectedID = selectedLibraryID
 
-            if let selectedLibraryID,
-               availableLibraries.contains(where: { $0.id == selectedLibraryID }) {
-                // Keep current selection
+            if let previousID = previouslySelectedID,
+               let updatedSelection = availableLibraries.first(where: { $0.id == previousID }) {
+                selectedLibrary = updatedSelection
             } else {
-                selectedLibraryID = availableLibraries.first?.id
+                selectedLibrary = availableLibraries.first
             }
         } catch {
             handleError(error, context: "Loading libraries")
@@ -141,7 +142,7 @@ class ImportViewModel: BaseViewModel {
 
         guard let libraryViewData = selectedLibrary,
               let library = fetchLibrary(with: libraryViewData.id) else {
-            print("❌ No library selected")
+            logger.error("❌ No library selected")
             viewState = .error(L10n.Errors.noLibrarySelectedMessage)
             return
         }
@@ -150,7 +151,7 @@ class ImportViewModel: BaseViewModel {
         if importMode == .pointAtDirectory {
             guard let directory = selectedDirectory else {
                 logger.error("❌ No directory selected")
-                viewState = .error("No directory selected for Point at Directory mode")
+                viewState = .error(L10n.Import.errorNoDirectorySelectedText())
                 return
             }
 
@@ -193,7 +194,7 @@ class ImportViewModel: BaseViewModel {
         // For "Add to Kanora" mode, files must be selected
         guard !selectedFiles.isEmpty else {
             logger.error("❌ No files selected")
-            viewState = .error("No files selected")
+            viewState = .error(L10n.Import.errorNoFilesSelectedText())
             return
         }
 
@@ -216,7 +217,7 @@ class ImportViewModel: BaseViewModel {
                     case .finished:
                         logger.info("✅ Import finished successfully - \(self.filesProcessed) files")
                         self.viewState = .loaded
-                        self.importStatus = "\(self.filesProcessed) files imported successfully"
+                        self.importStatus = L10n.Import.importSuccessText(self.filesProcessed)
                         self.selectedFiles.removeAll()
                     case .failure(let error):
                         logger.error("❌ Import failed: \(error.localizedDescription)")
