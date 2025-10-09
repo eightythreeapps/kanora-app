@@ -10,7 +10,7 @@ import AVFoundation
 import Combine
 
 /// Protocol defining audio playback operations
-protocol AudioPlayerServiceProtocol {
+protocol AudioPlayerServiceProtocol: AnyObject {
     /// Current playback state
     var state: PlaybackState { get }
 
