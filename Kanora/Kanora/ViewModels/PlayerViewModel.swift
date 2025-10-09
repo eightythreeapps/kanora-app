@@ -85,9 +85,7 @@ class PlayerViewModel: BaseViewModel {
 
     func toggleMute() {
         isMuted.toggle()
-        if let service = services.audioPlayerService as? AudioPlayerService {
-            service.isMuted = isMuted
-        }
+        services.audioPlayerService.isMuted = isMuted
     }
 
     func playTrack(_ track: TrackViewData) {
@@ -164,9 +162,7 @@ class PlayerViewModel: BaseViewModel {
             .sink { [weak self] newVolume in
                 guard let self = self else { return }
                 // Set volume on the audio player service
-                if let service = self.services.audioPlayerService as? AudioPlayerService {
-                    service.volume = newVolume
-                }
+                self.services.audioPlayerService.volume = newVolume
             }
             .store(in: &cancellables)
     }
