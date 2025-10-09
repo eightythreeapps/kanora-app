@@ -169,12 +169,25 @@ class LibraryViewModel: BaseViewModel {
             managedLibrary,
             in: context,
             progressHandler: { [weak self] progress in
-                self?.scanProgress = ScanProgress(
-                    filesScanned: 0,
-                    totalFiles: 0,
-                    currentFile: nil,
-                    percentage: progress
-                )
+                Task { @MainActor [weak self] in
+                    guard let self else { return }
+
+                    if let current = self.scanProgress {
+                        self.scanProgress = ScanProgress(
+                            filesScanned: current.filesScanned,
+                            totalFiles: current.totalFiles,
+                            currentFile: current.currentFile,
+                            percentage: progress
+                        )
+                    } else {
+                        self.scanProgress = ScanProgress(
+                            filesScanned: 0,
+                            totalFiles: 0,
+                            currentFile: nil,
+                            percentage: progress
+                        )
+                    }
+                }
             }
         )
         .receive(on: DispatchQueue.main)

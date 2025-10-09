@@ -48,10 +48,15 @@ class ServiceContainer {
         self.persistence = persistence
 
         // Initialize services with defaults or provided implementations
-        self.libraryService = libraryService ?? LibraryService(persistence: persistence)
+        let resolvedFileImportService = fileImportService ?? FileImportService(persistence: persistence)
+        self.fileImportService = resolvedFileImportService
+
+        self.libraryService = libraryService ?? LibraryService(
+            persistence: persistence,
+            fileImportService: resolvedFileImportService
+        )
         self.audioPlayerService = audioPlayerService ?? AudioPlayerService()
         self.apiServerService = apiServerService ?? APIServerService()
-        self.fileImportService = fileImportService ?? FileImportService(persistence: persistence)
     }
 
 }
