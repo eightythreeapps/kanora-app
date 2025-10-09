@@ -104,11 +104,11 @@ extension Track {
 
     /// Artist name (convenience)
     var artistName: String {
-        album?.artist?.name ?? "Unknown Artist"
+        album?.artist?.name ?? L10n.Library.unknownArtistName
     }
 
     /// Album title (convenience)
     var albumTitle: String {
-        album?.title ?? "Unknown Album"
+        album?.title ?? L10n.Library.unknownAlbumName
     }
 }

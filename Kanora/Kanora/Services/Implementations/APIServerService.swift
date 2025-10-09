@@ -130,13 +130,13 @@ enum ServerError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .notInitialized:
-            return "Server not initialized"
+            return L10n.Errors.Server.notInitialized
         case .alreadyRunning:
-            return "Server is already running"
+            return L10n.Errors.Server.alreadyRunning
         case .notRunning:
-            return "Server is not running"
+            return L10n.Errors.Server.notRunning
         case .portInUse:
-            return "Port is already in use"
+            return L10n.Errors.Server.portInUse
         }
     }
 }

@@ -136,6 +136,8 @@ enum L10n {
         static let artistCount: (Int) -> LocalizedStringKey = { count in
             LocalizedStringKey("library.artists.count \(count)")
         }
+        static let artistBiographyTitle = LocalizedStringKey("library.artists.biography.title")
+        static let artistBiographyPlaceholder = LocalizedStringKey("library.artists.biography.placeholder")
 
         // Albums
         static let albumsTitle = LocalizedStringKey("library.albums.title")
@@ -151,6 +153,13 @@ enum L10n {
         static let tracksEmptyMessage = LocalizedStringKey("library.tracks.empty_message")
         static let trackCount: (Int) -> LocalizedStringKey = { count in
             LocalizedStringKey("library.tracks.count \(count)")
+        }
+        static let bitratePerSecond: (String) -> LocalizedStringKey = { value in
+            LocalizedStringKey("library.tracks.bitrate_per_second \(value)")
+        }
+
+        static func bitratePerSecondText(_ value: String) -> String {
+            String(localized: "library.tracks.bitrate_per_second \(value)")
         }
 
         // Playlists
@@ -259,6 +268,42 @@ enum L10n {
 
         static var invalidFormatMessage: String {
             L10n.localizedString(forKey: "errors.invalid_format")
+        }
+
+        enum Playback {
+            static var noFilePath: String {
+                L10n.localizedString(forKey: "errors.playback.no_file_path")
+            }
+
+            static var fileNotFound: String {
+                L10n.localizedString(forKey: "errors.playback.file_not_found")
+            }
+
+            static var failedToStart: String {
+                L10n.localizedString(forKey: "errors.playback.failed")
+            }
+
+            static var unsupportedFormat: String {
+                L10n.localizedString(forKey: "errors.playback.unsupported_format")
+            }
+        }
+
+        enum Server {
+            static var notInitialized: String {
+                L10n.localizedString(forKey: "errors.server.not_initialized")
+            }
+
+            static var alreadyRunning: String {
+                L10n.localizedString(forKey: "errors.server.already_running")
+            }
+
+            static var notRunning: String {
+                L10n.localizedString(forKey: "errors.server.not_running")
+            }
+
+            static var portInUse: String {
+                L10n.localizedString(forKey: "errors.server.port_in_use")
+            }
         }
     }
 

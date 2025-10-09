@@ -313,13 +313,13 @@ enum PlaybackError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .noFilePath:
-            return "Track has no file path"
+            return L10n.Errors.Playback.noFilePath
         case .fileNotFound:
-            return "Audio file not found"
+            return L10n.Errors.Playback.fileNotFound
         case .playbackFailed:
-            return "Failed to start playback"
+            return L10n.Errors.Playback.failedToStart
         case .unsupportedFormat:
-            return "Unsupported audio format"
+            return L10n.Errors.Playback.unsupportedFormat
         }
     }
 }

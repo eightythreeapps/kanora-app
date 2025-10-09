@@ -444,12 +444,6 @@
     "Artist" : {
 
     },
-    "Artist biography will be displayed here. This could include information about the artist's background, musical style, and career highlights." : {
-
-    },
-    "Biography" : {
-
-    },
     "Choose Import Method" : {
 
     },
@@ -772,6 +766,50 @@
         }
       }
     },
+    "errors.playback.failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to start playback"
+          }
+        }
+      }
+    },
+    "errors.playback.file_not_found" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Audio file not found"
+          }
+        }
+      }
+    },
+    "errors.playback.no_file_path" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Track has no file path"
+          }
+        }
+      }
+    },
+    "errors.playback.unsupported_format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unsupported audio format"
+          }
+        }
+      }
+    },
     "errors.playback_failed" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -790,6 +828,50 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Failed to save changes"
+          }
+        }
+      }
+    },
+    "errors.server.already_running" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server is already running"
+          }
+        }
+      }
+    },
+    "errors.server.not_initialized" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server not initialized"
+          }
+        }
+      }
+    },
+    "errors.server.not_running" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Server is not running"
+          }
+        }
+      }
+    },
+    "errors.server.port_in_use" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Port is already in use"
           }
         }
       }
@@ -1497,6 +1579,28 @@
         }
       }
     },
+    "library.artists.biography.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Artist biography will be displayed here. This could include information about the artist's background, musical style, and career highlights."
+          }
+        }
+      }
+    },
+    "library.artists.biography.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Biography"
+          }
+        }
+      }
+    },
     "library.artists.title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1693,6 +1797,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Import music files to see your tracks here"
+          }
+        }
+      }
+    },
+    "library.tracks.bitrate_per_second %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@/s"
           }
         }
       }

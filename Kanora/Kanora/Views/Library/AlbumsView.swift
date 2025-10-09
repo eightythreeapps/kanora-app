@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Foundation
 import CoreData
 
 struct AlbumsView: View {
@@ -335,6 +336,19 @@ struct TrackRowView: View {
         isCurrentTrack && playerViewModel.isPlaying
     }
 
+    private var formattedBitrate: String? {
+        guard track.bitrate > 0 else { return nil }
+
+        let measurement = Measurement(value: Double(track.bitrate), unit: UnitInformationStorage.kilobits)
+        let formatter = MeasurementFormatter()
+        formatter.unitOptions = .providedUnit
+        formatter.unitStyle = .short
+        formatter.numberFormatter.maximumFractionDigits = 0
+
+        let formattedValue = formatter.string(from: measurement)
+        return L10n.Library.bitratePerSecondText(formattedValue)
+    }
+
     var body: some View {
         HStack(spacing: 12) {
             // Track number or playing indicator
@@ -364,10 +378,10 @@ struct TrackRowView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
 
-                        if track.bitrate > 0 {
+                        if let bitrateText = formattedBitrate {
                             Text("•")
                                 .foregroundColor(.secondary)
-                            Text("\(track.bitrate) kbps")
+                            Text(bitrateText)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
