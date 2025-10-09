@@ -335,9 +335,7 @@ struct NowPlayingView: View {
 
     private func formatRemainingTime() -> String {
         let remaining = max(0, viewModel.duration - viewModel.currentTime)
-        let minutes = Int(remaining) / 60
-        let seconds = Int(remaining) % 60
-        return String(format: "%d:%02d", minutes, seconds)
+        return DurationFormatter.string(from: remaining)
     }
 }
 

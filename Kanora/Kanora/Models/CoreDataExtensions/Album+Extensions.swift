@@ -89,15 +89,7 @@ extension Album {
 
     /// Formatted duration string
     var durationFormatted: String {
-        let hours = Int(totalDuration) / 3600
-        let minutes = (Int(totalDuration) % 3600) / 60
-        let seconds = Int(totalDuration) % 60
-
-        if hours > 0 {
-            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
-        } else {
-            return String(format: "%d:%02d", minutes, seconds)
-        }
+        DurationFormatter.string(from: totalDuration)
     }
 
     /// Load artwork image from file path

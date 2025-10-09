@@ -89,9 +89,7 @@ extension Track {
 
     /// Formatted duration string (mm:ss)
     var durationFormatted: String {
-        let minutes = Int(duration) / 60
-        let seconds = Int(duration) % 60
-        return String(format: "%d:%02d", minutes, seconds)
+        DurationFormatter.string(from: duration)
     }
 
     /// Formatted file size
