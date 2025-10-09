@@ -168,9 +168,7 @@ class PlayerViewModel: BaseViewModel {
     }
 
     private func formatTime(_ time: TimeInterval) -> String {
-        let minutes = Int(time) / 60
-        let seconds = Int(time) % 60
-        return String(format: "%d:%02d", minutes, seconds)
+        DurationFormatter.string(from: time)
     }
 
     private func updateCurrentTrack(with track: Track?) {
