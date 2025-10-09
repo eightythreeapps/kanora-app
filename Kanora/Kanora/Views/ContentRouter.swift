@@ -12,6 +12,7 @@ struct ContentRouter: View {
     let destination: NavigationDestination
     @Environment(\.serviceContainer) private var services
     @ObservedObject var navigationState: NavigationState
+    @ThemeAccess private var theme
 
     init(destination: NavigationDestination, navigationState: NavigationState) {
         self.destination = destination
@@ -66,13 +67,14 @@ struct ContentRouter: View {
     }
 
     private func emptySelection(icon: String, message: LocalizedStringKey) -> some View {
-        VStack(spacing: 12) {
+        VStack(spacing: theme.spacing.lg) {
             Image(systemName: icon)
-                .font(.system(size: 64))
-                .foregroundColor(.secondary)
+                .font(theme.typography.displaySmall)
+                .foregroundColor(theme.colors.textSecondary)
             Text(message)
-                .font(.headline)
-                .foregroundColor(.secondary)
+                .font(theme.typography.titleMedium)
+                .foregroundColor(theme.colors.textSecondary)
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -83,17 +85,19 @@ struct PlaceholderView: View {
     let icon: String
     let title: LocalizedStringKey
     let message: LocalizedStringKey
+    @ThemeAccess private var theme
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: theme.spacing.lg) {
             Image(systemName: icon)
-                .font(.system(size: 64))
-                .foregroundColor(.secondary)
+                .font(theme.typography.displaySmall)
+                .foregroundColor(theme.colors.textSecondary)
             Text(title)
-                .font(.title)
+                .font(theme.typography.titleLarge)
+                .foregroundColor(theme.colors.textPrimary)
             Text(message)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+                .font(theme.typography.bodyMedium)
+                .foregroundColor(theme.colors.textSecondary)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
