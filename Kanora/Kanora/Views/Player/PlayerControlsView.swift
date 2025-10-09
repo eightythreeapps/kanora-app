@@ -11,6 +11,7 @@ import AppKit
 #endif
 
 struct PlayerControlsView: View {
+    @ThemeAccess private var theme
     @EnvironmentObject private var viewModel: PlayerViewModel
 
     var body: some View {
