@@ -55,6 +55,7 @@ struct ContentView: View {
             }
         )
         .environment(\.managedObjectContext, viewContext)
+        .environment(\.serviceContainer, services)
         .environmentObject(navigationState)
     }
 
@@ -67,51 +68,13 @@ struct ContentView: View {
                     DispatchQueue.main.async {
                         navigationState.navigate(to: destination)
                     }
-                    // Return the appropriate view
-                    return destinationView(for: destination)
+                    // Return the appropriate view via the shared router
+                    return ContentRouter(destination: destination, navigationState: navigationState)
                 }
         }
         .environment(\.managedObjectContext, viewContext)
+        .environment(\.serviceContainer, services)
         .environmentObject(navigationState)
-    }
-
-    @available(iOS 16.0, macOS 13.0, *)
-    @ViewBuilder
-    private func destinationView(for destination: NavigationDestination) -> some View {
-        switch destination {
-        case .artists:
-            ArtistsView()
-        case .albums:
-            AlbumsView()
-        case .tracks:
-            TracksView()
-        case .playlists:
-            PlaylistsView()
-        case .nowPlaying:
-            NowPlayingView()
-        case .cdRipping:
-            PlaceholderView(
-                icon: "opticaldiscdrive",
-                title: L10n.Navigation.cdRipping,
-                message: L10n.Placeholders.cdRippingMessage
-            )
-        case .importFiles:
-            ImportFilesView(services: services)
-        case .preferences:
-            PlaceholderView(
-                icon: "gearshape",
-                title: L10n.Navigation.preferences,
-                message: L10n.Placeholders.preferencesMessage
-            )
-        case .apiServer:
-            PlaceholderView(
-                icon: "server.rack",
-                title: L10n.Navigation.apiServer,
-                message: L10n.Placeholders.apiServerMessage
-            )
-        case .devTools:
-            DevToolsView(services: services)
-        }
     }
 
     private var fallbackLayout: some View {
@@ -123,6 +86,7 @@ struct ContentView: View {
             contentColumn
         }
         .environment(\.managedObjectContext, viewContext)
+        .environment(\.serviceContainer, services)
         .environmentObject(navigationState)
     }
 
@@ -130,61 +94,20 @@ struct ContentView: View {
 
     @ViewBuilder
     private var contentColumn: some View {
-        switch navigationState.selectedDestination {
-        case .artists:
-            if #available(iOS 16.0, macOS 13.0, *) {
-                NavigationStack {
-                    ArtistsView()
-                        .navigationDestination(for: Artist.self) { artist in
-                            ArtistDetailView(artist: artist)
-                                .navigationDestination(for: Album.self) { album in
-                                    AlbumDetailView(album: album)
-                                }
-                        }
-                }
-            } else {
-                ArtistsView()
+        let destination = navigationState.selectedDestination
+
+        if #available(iOS 16.0, macOS 13.0, *), requiresNestedNavigation(for: destination) {
+            NavigationStack {
+                ContentRouter(destination: destination, navigationState: navigationState)
             }
-        case .albums:
-            if #available(iOS 16.0, macOS 13.0, *) {
-                NavigationStack {
-                    AlbumsView()
-                        .navigationDestination(for: Album.self) { album in
-                            AlbumDetailView(album: album)
-                        }
-                }
-            } else {
-                AlbumsView()
-            }
-        case .tracks:
-            TracksView()
-        case .playlists:
-            PlaylistsView()
-        case .nowPlaying:
-            NowPlayingView()
-        case .cdRipping:
-            PlaceholderView(
-                icon: "opticaldiscdrive",
-                title: L10n.Navigation.cdRipping,
-                message: L10n.Placeholders.cdRippingMessage
-            )
-        case .importFiles:
-            ImportFilesView(services: services)
-        case .preferences:
-            PlaceholderView(
-                icon: "gearshape",
-                title: L10n.Navigation.preferences,
-                message: L10n.Placeholders.preferencesMessage
-            )
-        case .apiServer:
-            PlaceholderView(
-                icon: "server.rack",
-                title: L10n.Navigation.apiServer,
-                message: L10n.Placeholders.apiServerMessage
-            )
-        case .devTools:
-            DevToolsView(services: services)
+        } else {
+            ContentRouter(destination: destination, navigationState: navigationState)
         }
+    }
+
+    @available(iOS 16.0, macOS 13.0, *)
+    private func requiresNestedNavigation(for destination: NavigationDestination) -> Bool {
+        destination == .artists || destination == .albums
     }
 }
 

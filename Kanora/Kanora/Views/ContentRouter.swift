@@ -20,63 +20,92 @@ struct ContentRouter: View {
     }
 
     var body: some View {
-        Group {
-            // Check for artist/album selection first
-            if destination == .artists, let album = navigationState.selectedAlbum {
-                AlbumDetailView(album: album)
-            } else if destination == .artists, let artist = navigationState.selectedArtist {
-                ArtistDetailView(artist: artist)
-            } else {
-                // Default destination routing
-                switch destination {
-                case .artists:
-                    emptySelection(icon: "music.mic", message: L10n.Placeholders.selectArtistMessage)
-                case .albums:
-                    AlbumsView()
-                case .tracks:
-                    TracksView()
-                case .playlists:
-                    PlaylistsView()
-                case .nowPlaying:
-                    NowPlayingView()
-                case .cdRipping:
-                    PlaceholderView(
-                        icon: "opticaldiscdrive",
-                        title: L10n.Navigation.cdRipping,
-                        message: L10n.Placeholders.cdRippingMessage
-                    )
-                case .importFiles:
-                    ImportFilesView(services: services)
-                case .preferences:
-                    PlaceholderView(
-                        icon: "gearshape",
-                        title: L10n.Navigation.preferences,
-                        message: L10n.Placeholders.preferencesMessage
-                    )
-                case .apiServer:
-                    PlaceholderView(
-                        icon: "server.rack",
-                        title: L10n.Navigation.apiServer,
-                        message: L10n.Placeholders.apiServerMessage
-                    )
-                case .devTools:
-                    DevToolsView(services: services)
-                }
-            }
+        routedView(for: destination)
+    }
+
+    @ViewBuilder
+    private func routedView(for destination: NavigationDestination) -> some View {
+        switch destination {
+        case .artists:
+            artistsDestination()
+        case .albums:
+            albumsDestination()
+        case .tracks:
+            TracksView()
+        case .playlists:
+            PlaylistsView()
+        case .nowPlaying:
+            NowPlayingView()
+        case .cdRipping:
+            PlaceholderView(
+                icon: "opticaldiscdrive",
+                title: L10n.Navigation.cdRipping,
+                message: L10n.Placeholders.cdRippingMessage
+            )
+        case .importFiles:
+            ImportFilesView(services: services)
+        case .preferences:
+            PlaceholderView(
+                icon: "gearshape",
+                title: L10n.Navigation.preferences,
+                message: L10n.Placeholders.preferencesMessage
+            )
+        case .apiServer:
+            PlaceholderView(
+                icon: "server.rack",
+                title: L10n.Navigation.apiServer,
+                message: L10n.Placeholders.apiServerMessage
+            )
+        case .devTools:
+            DevToolsView(services: services)
         }
     }
 
-    private func emptySelection(icon: String, message: LocalizedStringKey) -> some View {
-        VStack(spacing: theme.spacing.lg) {
-            Image(systemName: icon)
-                .font(theme.typography.displaySmall)
-                .foregroundColor(theme.colors.textSecondary)
-            Text(message)
-                .font(theme.typography.titleMedium)
-                .foregroundColor(theme.colors.textSecondary)
-                .multilineTextAlignment(.center)
+    @ViewBuilder
+    private func artistsDestination() -> some View {
+        if let album = navigationState.selectedAlbum {
+            AlbumDetailView(album: album)
+        } else if let artist = navigationState.selectedArtist {
+            ArtistDetailView(artist: artist)
+        } else {
+            artistsRootView()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    @ViewBuilder
+    private func albumsDestination() -> some View {
+        if let album = navigationState.selectedAlbum, destination == .albums {
+            AlbumDetailView(album: album)
+        } else {
+            albumsRootView()
+        }
+    }
+
+    @ViewBuilder
+    private func artistsRootView() -> some View {
+        if #available(iOS 16.0, macOS 13.0, *) {
+            ArtistsView()
+                .navigationDestination(for: Artist.self) { artist in
+                    ArtistDetailView(artist: artist)
+                }
+                .navigationDestination(for: Album.self) { album in
+                    AlbumDetailView(album: album)
+                }
+        } else {
+            ArtistsView()
+        }
+    }
+
+    @ViewBuilder
+    private func albumsRootView() -> some View {
+        if #available(iOS 16.0, macOS 13.0, *) {
+            AlbumsView()
+                .navigationDestination(for: Album.self) { album in
+                    AlbumDetailView(album: album)
+                }
+        } else {
+            AlbumsView()
+        }
     }
 }
 
