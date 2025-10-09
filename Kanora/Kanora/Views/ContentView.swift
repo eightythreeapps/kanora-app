@@ -13,14 +13,10 @@ struct ContentView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @StateObject private var navigationState = NavigationState()
-    @StateObject private var playerViewModel: PlayerViewModel
+    @EnvironmentObject private var playerViewModel: PlayerViewModel
     private let services: ServiceContainer
 
     init(services: ServiceContainer) {
-        self._playerViewModel = StateObject(wrappedValue: PlayerViewModel(
-            context: services.persistence.viewContext,
-            services: services
-        ))
         self.services = services
     }
 
@@ -44,7 +40,6 @@ struct ContentView: View {
                 FloatingMiniPlayer()
             }
         }
-        .environmentObject(playerViewModel)
     }
 
     // MARK: - Layout Variants

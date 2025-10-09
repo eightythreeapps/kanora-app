@@ -29,8 +29,10 @@ struct PreviewFactory {
     /// Creates ContentView with preview data
     static func makeContentView(state: PreviewState = .populated) -> some View {
         let services = makeServices(for: state)
+        let playerViewModel = makePlayerViewModel(for: services)
         return ContentView(services: services)
             .environment(\.managedObjectContext, services.persistence.viewContext)
+            .environmentObject(playerViewModel)
             .designSystem()
     }
 
