@@ -9,6 +9,7 @@ import SwiftUI
 
 struct DevToolsView: View {
     @StateObject private var viewModel: DevToolsViewModel
+    @ThemeAccess private var theme
 
     init(services: ServiceContainer) {
         _viewModel = StateObject(wrappedValue: DevToolsViewModel(
@@ -20,13 +21,13 @@ struct DevToolsView: View {
     var body: some View {
         Form {
             Section {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: theme.spacing.sm) {
                     Text(L10n.Development.clearAllData)
-                        .font(.headline)
+                        .font(theme.typography.titleSmall)
 
                     Text(L10n.Development.clearAllDataDescription)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.bodySmall)
+                        .foregroundStyle(theme.colors.textSecondary)
 
                     Button(role: .destructive) {
                         viewModel.showingClearDataConfirmation = true
@@ -35,7 +36,7 @@ struct DevToolsView: View {
                     }
                     .buttonStyle(.borderedProminent)
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, theme.spacing.xs)
             } header: {
                 Text(L10n.Development.title)
             }

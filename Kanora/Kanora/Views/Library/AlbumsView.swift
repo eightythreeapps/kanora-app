@@ -12,6 +12,7 @@ import CoreData
 struct AlbumsView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject private var navigationState: NavigationState
+    @ThemeAccess private var theme
 
     @FetchRequest(
         sortDescriptors: [
@@ -34,9 +35,14 @@ struct AlbumsView: View {
         }
     }
 
-    let columns = [
-        GridItem(.adaptive(minimum: 150, maximum: 200), spacing: 16)
-    ]
+    private var columns: [GridItem] {
+        [
+            GridItem(
+                .adaptive(minimum: 150, maximum: 200),
+                spacing: theme.spacing.md
+            )
+        ]
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -51,24 +57,24 @@ struct AlbumsView: View {
             // Albums grid
             if filteredAlbums.isEmpty {
                 Spacer()
-                VStack(spacing: 12) {
+                VStack(spacing: theme.spacing.sm) {
                     Image(systemName: "square.stack")
-                        .font(.system(size: 48))
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.headlineMedium)
+                        .foregroundStyle(theme.colors.textSecondary)
                     Text(searchText.isEmpty ? L10n.Library.albumsEmpty : L10n.Library.noResults)
-                        .font(.headline)
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.titleSmall)
+                        .foregroundStyle(theme.colors.textSecondary)
                     if searchText.isEmpty {
                         Text(L10n.Library.albumsEmptyMessage)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .font(theme.typography.bodySmall)
+                            .foregroundStyle(theme.colors.textSecondary)
                             .multilineTextAlignment(.center)
                     }
                 }
                 Spacer()
             } else {
                 ScrollView {
-                    LazyVGrid(columns: columns, spacing: 16) {
+                    LazyVGrid(columns: columns, spacing: theme.spacing.md) {
                         ForEach(filteredAlbums) { album in
                             if #available(iOS 16.0, macOS 13.0, *) {
                                 NavigationLink(value: album) {
@@ -85,8 +91,8 @@ struct AlbumsView: View {
                             }
                         }
                     }
-                    .padding()
-                    .padding(.bottom, 100)
+                    .padding(theme.spacing.md)
+                    .padding(.bottom, theme.spacing.xxxxl * 2)
                 }
             }
         }
@@ -94,8 +100,8 @@ struct AlbumsView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Text(L10n.Library.albumCount(filteredAlbums.count))
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .font(theme.typography.bodySmall)
+                    .foregroundStyle(theme.colors.textSecondary)
             }
         }
     }
@@ -103,9 +109,10 @@ struct AlbumsView: View {
 
 struct AlbumGridItem: View {
     let album: Album
+    @ThemeAccess private var theme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: theme.spacing.xs) {
             // Album artwork
             Group {
                 if let artworkImage = album.artworkImage {
@@ -119,35 +126,35 @@ struct AlbumGridItem: View {
                         .aspectRatio(contentMode: .fill)
                     #endif
                 } else {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(Color.secondary.opacity(0.2))
+                    RoundedRectangle(cornerRadius: theme.effects.radiusSM)
+                        .fill(theme.colors.surfaceSecondary)
                         .overlay {
                             Image(systemName: "music.note")
-                                .font(.system(size: 40))
-                                .foregroundColor(.secondary)
+                                .font(theme.typography.headlineSmall)
+                                .foregroundStyle(theme.colors.textSecondary)
                         }
                 }
             }
             .aspectRatio(1, contentMode: .fit)
-            .cornerRadius(8)
+            .cornerRadius(theme.effects.radiusSM)
             .clipped()
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: theme.spacing.xxxs) {
                 Text(album.title ?? String(localized: "library.unknown_album"))
-                    .font(.headline)
+                    .font(theme.typography.titleSmall)
                     .lineLimit(2)
                     .frame(minHeight: 44, maxHeight: 44, alignment: .top)
-                    .foregroundColor(.primary)
+                    .foregroundStyle(theme.colors.textPrimary)
 
                 Text(album.artist?.name ?? String(localized: "library.unknown_artist"))
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .font(theme.typography.bodySmall)
+                    .foregroundStyle(theme.colors.textSecondary)
                     .lineLimit(1)
 
                 if album.year > 0 {
                     Text("\(album.year)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.labelSmall)
+                        .foregroundStyle(theme.colors.textSecondary)
                 }
             }
         }
@@ -158,6 +165,7 @@ struct AlbumDetailView: View {
     let album: Album
     @EnvironmentObject private var playerViewModel: PlayerViewModel
     private let logger = AppLogger.libraryView
+    @ThemeAccess private var theme
 
     private var tracks: [Track] {
         guard let tracksSet = album.tracks as? Set<Track> else { return [] }
@@ -173,7 +181,7 @@ struct AlbumDetailView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Album header
-            HStack(alignment: .top, spacing: 24) {
+            HStack(alignment: .top, spacing: theme.spacing.xl) {
                 // Album artwork
                 Group {
                     if let artworkImage = album.artworkImage {
@@ -187,49 +195,50 @@ struct AlbumDetailView: View {
                             .aspectRatio(contentMode: .fill)
                         #endif
                     } else {
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.secondary.opacity(0.2))
+                        RoundedRectangle(cornerRadius: theme.effects.radiusMD)
+                            .fill(theme.colors.surfaceSecondary)
                             .overlay {
                                 Image(systemName: "music.note")
-                                    .font(.system(size: 60))
-                                    .foregroundColor(.secondary)
+                                    .font(theme.typography.headlineMedium)
+                                    .foregroundStyle(theme.colors.textSecondary)
                             }
                     }
                 }
                 .frame(width: 200, height: 200)
-                .cornerRadius(12)
+                .cornerRadius(theme.effects.radiusMD)
                 .shadow(radius: 10, y: 5)
 
-                VStack(alignment: .leading, spacing: 16) {
-                    VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: theme.spacing.lg) {
+                    VStack(alignment: .leading, spacing: theme.spacing.xs) {
                         Text(album.title ?? String(localized: "library.unknown_album"))
-                            .font(.title.bold())
+                            .font(theme.typography.headlineLarge)
+                            .fontWeight(.bold)
 
                         Text(album.artist?.name ?? String(localized: "library.unknown_artist"))
-                            .font(.title3)
-                            .foregroundColor(.secondary)
+                            .font(theme.typography.titleSmall)
+                            .foregroundStyle(theme.colors.textSecondary)
 
-                        HStack(spacing: 12) {
+                        HStack(spacing: theme.spacing.sm) {
                             if album.year > 0 {
                                 Text("\(album.year)")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                    .font(theme.typography.bodySmall)
+                                    .foregroundStyle(theme.colors.textSecondary)
                             }
 
                             if tracks.count > 0 {
                                 Text("•")
-                                    .foregroundColor(.secondary)
+                                    .foregroundStyle(theme.colors.textSecondary)
                                 Text(L10n.Library.trackCount(tracks.count))
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                    .font(theme.typography.bodySmall)
+                                    .foregroundStyle(theme.colors.textSecondary)
                             }
 
                             if album.totalDuration > 0 {
                                 Text("•")
-                                    .foregroundColor(.secondary)
+                                    .foregroundStyle(theme.colors.textSecondary)
                                 Text(album.durationFormatted)
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                    .font(theme.typography.bodySmall)
+                                    .foregroundStyle(theme.colors.textSecondary)
                             }
                         }
                     }
@@ -241,12 +250,12 @@ struct AlbumDetailView: View {
                             playAlbum()
                         }) {
                             Label(L10n.Actions.play, systemImage: "play.fill")
-                                .font(.headline)
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 32)
-                                .padding(.vertical, 12)
-                                .background(Color.accentColor)
-                                .cornerRadius(8)
+                                .font(theme.typography.titleSmall)
+                                .foregroundStyle(theme.colors.onAccent)
+                                .padding(.horizontal, theme.spacing.xxl)
+                                .padding(.vertical, theme.spacing.sm)
+                                .background(theme.colors.accent)
+                                .cornerRadius(theme.effects.radiusSM)
                         }
                         .buttonStyle(.plain)
                     }
@@ -254,21 +263,21 @@ struct AlbumDetailView: View {
 
                 Spacer()
             }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 24)
+            .padding(.horizontal, theme.spacing.xl)
+            .padding(.vertical, theme.spacing.xl)
 
             Divider()
 
             // Track listing
             if tracks.isEmpty {
                 Spacer()
-                VStack(spacing: 12) {
+                VStack(spacing: theme.spacing.sm) {
                     Image(systemName: "music.note.list")
-                        .font(.system(size: 48))
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.headlineMedium)
+                        .foregroundStyle(theme.colors.textSecondary)
                     Text(L10n.Library.tracksEmpty)
-                        .font(.headline)
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.titleSmall)
+                        .foregroundStyle(theme.colors.textSecondary)
                 }
                 Spacer()
             } else {
@@ -326,6 +335,7 @@ struct AlbumDetailView: View {
 struct TrackRowView: View {
     let track: Track
     @EnvironmentObject private var playerViewModel: PlayerViewModel
+    @ThemeAccess private var theme
 
     private var isCurrentTrack: Bool {
         guard let trackID = track.id else { return false }
@@ -350,40 +360,40 @@ struct TrackRowView: View {
     }
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: theme.spacing.sm) {
             // Track number or playing indicator
             if isPlaying {
                 Image(systemName: "speaker.wave.2.fill")
-                    .font(.subheadline)
-                    .foregroundColor(.accentColor)
+                    .font(theme.typography.bodySmall)
+                    .foregroundStyle(theme.colors.accent)
             } else if isCurrentTrack {
                 Image(systemName: "pause.fill")
-                    .font(.caption)
-                    .foregroundColor(.accentColor)
+                    .font(theme.typography.labelSmall)
+                    .foregroundStyle(theme.colors.accent)
             } else {
                 Text("\(track.trackNumber)")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .font(theme.typography.bodySmall)
+                    .foregroundStyle(theme.colors.textSecondary)
                     .monospacedDigit()
             }
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: theme.spacing.xxxs) {
                 Text(track.title ?? String(localized: "library.unknown_track"))
-                    .font(.body)
-                    .foregroundColor(isCurrentTrack ? .accentColor : .primary)
+                    .font(theme.typography.bodyMedium)
+                    .foregroundStyle(isCurrentTrack ? theme.colors.accent : theme.colors.textPrimary)
 
                 if let format = track.format {
-                    HStack(spacing: 4) {
+                    HStack(spacing: theme.spacing.xxxs) {
                         Text(format)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(theme.typography.labelSmall)
+                            .foregroundStyle(theme.colors.textSecondary)
 
                         if let bitrateText = formattedBitrate {
                             Text("•")
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(theme.colors.textSecondary)
                             Text(bitrateText)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                                .font(theme.typography.labelSmall)
+                                .foregroundStyle(theme.colors.textSecondary)
                         }
                     }
                 }
@@ -393,8 +403,8 @@ struct TrackRowView: View {
 
             // Duration
             Text(track.durationFormatted)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
+                .font(theme.typography.bodySmall)
+                .foregroundStyle(theme.colors.textSecondary)
                 .monospacedDigit()
 
             // Play button (appears on hover)
@@ -402,12 +412,12 @@ struct TrackRowView: View {
                 // TODO: Play this track
             }) {
                 Image(systemName: "play.fill")
-                    .font(.caption)
+                    .font(theme.typography.labelSmall)
             }
             .buttonStyle(.plain)
             .opacity(0.7)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, theme.spacing.xxxs)
         .contentShape(Rectangle())
         .contextMenu {
             Button(action: {}) {
