@@ -38,8 +38,8 @@ struct AlbumsView: View {
     private var columns: [GridItem] {
         [
             GridItem(
-                .adaptive(minimum: 150, maximum: 200),
-                spacing: theme.spacing.md
+                .adaptive(minimum: 180, maximum: 240),
+                spacing: theme.spacing.lg
             )
         ]
     }
@@ -74,7 +74,7 @@ struct AlbumsView: View {
                 Spacer()
             } else {
                 ScrollView {
-                    LazyVGrid(columns: columns, spacing: theme.spacing.md) {
+                    LazyVGrid(columns: columns, spacing: theme.spacing.lg) {
                         ForEach(filteredAlbums) { album in
                             if #available(iOS 16.0, macOS 13.0, *) {
                                 NavigationLink(value: album) {
@@ -91,7 +91,7 @@ struct AlbumsView: View {
                             }
                         }
                     }
-                    .padding(theme.spacing.md)
+                    .padding(theme.spacing.lg)
                     .padding(.bottom, theme.spacing.xxxxl * 2)
                 }
             }
@@ -112,52 +112,61 @@ struct AlbumGridItem: View {
     @ThemeAccess private var theme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: theme.spacing.xs) {
-            // Album artwork
-            Group {
-                if let artworkImage = album.artworkImage {
-                    #if os(macOS)
-                    Image(nsImage: artworkImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                    #else
-                    Image(uiImage: artworkImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                    #endif
-                } else {
-                    RoundedRectangle(cornerRadius: theme.effects.radiusSM)
-                        .fill(theme.colors.surfaceSecondary)
-                        .overlay {
-                            Image(systemName: "music.note")
-                                .font(theme.typography.headlineSmall)
-                                .foregroundStyle(theme.colors.textSecondary)
-                        }
+        VStack(alignment: .leading, spacing: theme.spacing.sm) {
+            // Album artwork - square aspect ratio with fixed size
+            GeometryReader { geometry in
+                Group {
+                    if let artworkImage = album.artworkImage {
+                        #if os(macOS) && !targetEnvironment(macCatalyst)
+                        Image(nsImage: artworkImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                        #else
+                        Image(uiImage: artworkImage)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                        #endif
+                    } else {
+                        RoundedRectangle(cornerRadius: theme.effects.radiusSM)
+                            .fill(theme.colors.surfaceSecondary)
+                            .overlay {
+                                Image(systemName: "music.note")
+                                    .font(theme.typography.headlineSmall)
+                                    .foregroundStyle(theme.colors.textSecondary)
+                            }
+                    }
                 }
+                .frame(width: geometry.size.width, height: geometry.size.width)
+                .cornerRadius(theme.effects.radiusSM)
+                .clipped()
             }
             .aspectRatio(1, contentMode: .fit)
-            .cornerRadius(theme.effects.radiusSM)
-            .clipped()
+            .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
 
-            VStack(alignment: .leading, spacing: theme.spacing.xxxs) {
+            // Text content with consistent spacing and fixed height
+            VStack(alignment: .leading, spacing: theme.spacing.xxs) {
+                // Album title - 2 lines max, truncated at end
                 Text(album.title ?? String(localized: "library.unknown_album"))
-                    .font(theme.typography.titleSmall)
-                    .lineLimit(2)
-                    .frame(minHeight: 44, maxHeight: 44, alignment: .top)
+                    .font(theme.typography.bodyMedium)
                     .foregroundStyle(theme.colors.textPrimary)
+                    .lineLimit(2)
+                    .truncationMode(.tail)
+                    .multilineTextAlignment(.leading)
+                    .frame(height: 40, alignment: .top)
 
+                // Artist name - 1 line, truncated at end
                 Text(album.artist?.name ?? String(localized: "library.unknown_artist"))
                     .font(theme.typography.bodySmall)
                     .foregroundStyle(theme.colors.textSecondary)
                     .lineLimit(1)
-
-                if album.year > 0 {
-                    Text("\(album.year)")
-                        .font(theme.typography.labelSmall)
-                        .foregroundStyle(theme.colors.textSecondary)
-                }
+                    .truncationMode(.tail)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(height: 56)
         }
+        .padding(theme.spacing.sm)
+        .background(theme.colors.surface)
+        .cornerRadius(theme.effects.radiusMD)
     }
 }
 

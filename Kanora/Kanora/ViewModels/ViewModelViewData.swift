@@ -1,11 +1,11 @@
 import Foundation
 import CoreData
-#if canImport(AppKit)
+#if os(macOS) && !targetEnvironment(macCatalyst)
 import AppKit
-private typealias PlatformImage = NSImage
-#elseif canImport(UIKit)
+typealias PlatformImage = NSImage
+#else
 import UIKit
-private typealias PlatformImage = UIImage
+typealias PlatformImage = UIImage
 #endif
 
 struct LibrarySummary: Identifiable, Equatable {
@@ -95,14 +95,14 @@ struct TrackViewData: Identifiable, Equatable {
         DurationFormatter.string(from: duration)
     }
 
-    #if canImport(AppKit) || canImport(UIKit)
     var artworkImage: PlatformImage? {
         guard let artworkPath else { return nil }
-        return PlatformImage(contentsOfFile: artworkPath)
+        #if os(macOS) && !targetEnvironment(macCatalyst)
+        return NSImage(contentsOfFile: artworkPath)
+        #else
+        return UIImage(contentsOfFile: artworkPath)
+        #endif
     }
-    #else
-    var artworkImage: Any? { nil }
-    #endif
 }
 
 private extension String {

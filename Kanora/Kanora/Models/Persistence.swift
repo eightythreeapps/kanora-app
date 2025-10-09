@@ -61,6 +61,7 @@ struct PersistenceController {
         }
 
         // Load persistent stores
+        let logger = self.logger
         container.loadPersistentStores { storeDescription, error in
             if let error = error as NSError? {
                 /*

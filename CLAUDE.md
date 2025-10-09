@@ -9,6 +9,13 @@ Please refer to @IOS_DEVELOPMENT_STANDARDS.md
 
 Kanora is a Mac Catalyst music player and library manager built with Swift and SwiftUI. It supports CD ripping, local playback, and remote streaming via REST API. The project targets macOS 12+ and uses modern iOS/macOS development practices.
 
+Platform Strategy:
+
+  - Native macOS: Uses AppKit (NSImage, NSImage(contentsOfFile:))
+  - Mac Catalyst & iOS: Uses UIKit (UIImage, UIImage(contentsOfFile:))
+
+The pattern #if os(macOS) && !targetEnvironment(macCatalyst) ensures AppKit APIs are only used on native macOS where they're fully available, while iOS and Catalyst apps use UIKit APIs exclusively.
+
 ## Build and Development Commands
 
 ### Building and Running
@@ -319,3 +326,4 @@ persistence.performBackgroundTask { context in
 4. Add mock variant to `ServiceContainer.mock()` method
 5. Inject via ServiceContainer in ViewModels
 6. Never store state in services - they're shared across app
+- This is a mac catalyst app. No macOS native. UIKit and SwiftUI all the way.

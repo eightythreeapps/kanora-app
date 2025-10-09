@@ -397,6 +397,7 @@ class FileImportService: FileImportServiceProtocol {
 
         // Use background context
         logger.debug("🗄️ Starting background task")
+        let logger = self.logger
         await persistence.performBackgroundTask { context in
             logger.debug("📝 Inside background context")
             do {

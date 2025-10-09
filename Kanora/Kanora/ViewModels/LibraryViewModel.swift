@@ -249,6 +249,7 @@ class LibraryViewModel: BaseViewModel {
     }
 
     private func fetchLibrary(with id: Library.ID) -> Library? {
+        guard let id = id else { return nil }
         let request: NSFetchRequest<Library> = Library.fetchRequest()
         request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
         request.fetchLimit = 1

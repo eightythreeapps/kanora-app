@@ -229,7 +229,7 @@ enum L10n {
         static let networkError = LocalizedStringKey("errors.network")
         static let fileNotFound = LocalizedStringKey("errors.file_not_found")
         static let importFailed = LocalizedStringKey("errors.import_failed")
-        static let playbackFailed = LocalizedStringKey("errors.playback_failed")
+        static let playbackFailed = LocalizedStringKey("errors.playback.failed")
         static let saveFailed = LocalizedStringKey("errors.save_failed")
         static let deleteFailed = LocalizedStringKey("errors.delete_failed")
         static let loadFailed = LocalizedStringKey("errors.load_failed")

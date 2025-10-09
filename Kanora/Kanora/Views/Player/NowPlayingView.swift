@@ -73,7 +73,7 @@ struct NowPlayingView: View {
 
         return Group {
             if let artworkImage = track.artworkImage {
-                #if os(macOS)
+                #if os(macOS) && !targetEnvironment(macCatalyst)
                 Image(nsImage: artworkImage)
                     .resizable()
                     .aspectRatio(contentMode: .fill)

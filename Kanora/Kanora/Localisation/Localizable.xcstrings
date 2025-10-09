@@ -17,23 +17,7 @@
     "%d" : {
 
     },
-    "%d kbps" : {
-
-    },
     "%lld" : {
-
-    },
-    "%lld / %lld" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "%1$lld / %2$lld"
-          }
-        }
-      }
-    },
-    "%lld files selected" : {
 
     },
     "•" : {
@@ -444,9 +428,6 @@
     "Artist" : {
 
     },
-    "Choose Import Method" : {
-
-    },
     "common.app_name" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -634,6 +615,17 @@
         }
       }
     },
+    "errors.failed_to_load_libraries" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to load libraries"
+          }
+        }
+      }
+    },
     "errors.file_not_found" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -689,28 +681,6 @@
         }
       }
     },
-    "errors.load_failed" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed to load data"
-          }
-        }
-      }
-    },
-    "errors.failed_to_load_libraries" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed to load libraries"
-          }
-        }
-      }
-    },
     "errors.library_not_found" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -718,6 +688,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Library not found"
+          }
+        }
+      }
+    },
+    "errors.load_failed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Failed to load data"
           }
         }
       }
@@ -810,17 +791,6 @@
         }
       }
     },
-    "errors.playback_failed" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Playback failed"
-          }
-        }
-      }
-    },
     "errors.save_failed" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -875,6 +845,9 @@
           }
         }
       }
+    },
+    "errors.track_not_found" : {
+
     },
     "forms.album" : {
       "extractionState" : "manual",
@@ -1019,9 +992,6 @@
         }
       }
     },
-    "import.clear_selection" : {
-
-    },
     "import.choose_method" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1032,6 +1002,9 @@
           }
         }
       }
+    },
+    "import.clear_selection" : {
+
     },
     "import.complete" : {
       "extractionState" : "manual",
@@ -1069,72 +1042,6 @@
         }
       }
     },
-    "import.library_point_success %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Library successfully pointed at %1$@"
-          }
-        }
-      }
-    },
-    "import.progress_fraction %lld %lld" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$lld / %2$lld"
-          }
-        }
-      }
-    },
-    "import.mode.add_to_kanora.description" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copy files to Kanora and organize them by Artist/Album"
-          }
-        }
-      }
-    },
-    "import.mode.add_to_kanora.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add to Kanora"
-          }
-        }
-      }
-    },
-    "import.mode.point_at_directory.description" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keep files in their current location and scan recursively"
-          }
-        }
-      }
-    },
-    "import.mode.point_at_directory.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Point at Directory"
-          }
-        }
-      }
-    },
     "import.drop_files_here" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1142,6 +1049,28 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Drop files here"
+          }
+        }
+      }
+    },
+    "import.error.no_directory_selected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No directory selected"
+          }
+        }
+      }
+    },
+    "import.error.no_files_selected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No files selected"
           }
         }
       }
@@ -1199,84 +1128,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "import.no_directory_selected" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No directory selected for Point at Directory mode"
-          }
-        }
-      }
-    },
-    "import.no_files_selected" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No files selected"
-          }
-        }
-      }
-    },
-    "import.error.no_directory_selected" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No directory selected"
-          }
-        }
-      }
-    },
-    "import.error.no_files_selected" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No files selected"
-          }
-        }
-      }
-    },
-    "import.success %lld" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld file imported successfully"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld files imported successfully"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "import.no_library_selected" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No library selected"
           }
         }
       }
@@ -1348,6 +1199,17 @@
         }
       }
     },
+    "import.library_point_success %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Library successfully pointed at %1$@"
+          }
+        }
+      }
+    },
     "import.lookup_metadata" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1359,8 +1221,82 @@
         }
       }
     },
+    "import.mode.add_to_kanora.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy files to Kanora and organize them by Artist/Album"
+          }
+        }
+      }
+    },
+    "import.mode.add_to_kanora.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add to Kanora"
+          }
+        }
+      }
+    },
+    "import.mode.point_at_directory.description" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep files in their current location and scan recursively"
+          }
+        }
+      }
+    },
+    "import.mode.point_at_directory.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Point at Directory"
+          }
+        }
+      }
+    },
+    "import.no_directory_selected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No directory selected for Point at Directory mode"
+          }
+        }
+      }
+    },
+    "import.no_files_selected" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No files selected"
+          }
+        }
+      }
+    },
     "import.no_library_selected" : {
-
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No library selected"
+          }
+        }
+      }
     },
     "import.preparing" : {
       "extractionState" : "manual",
@@ -1369,6 +1305,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Preparing..."
+          }
+        }
+      }
+    },
+    "import.progress_fraction %lld %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld / %2$lld"
           }
         }
       }
@@ -1417,17 +1364,6 @@
         }
       }
     },
-    "import.supported_formats" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Supported formats: MP3, FLAC, M4A, WAV, AAC"
-          }
-        }
-      }
-    },
     "import.select_folder" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1468,6 +1404,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Start Ripping"
+          }
+        }
+      }
+    },
+    "import.success %lld" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld file imported successfully"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld files imported successfully"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "import.supported_formats" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supported formats: MP3, FLAC, M4A, WAV, AAC"
           }
         }
       }
@@ -1534,6 +1504,28 @@
         }
       }
     },
+    "library.artists.biography.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Artist biography will be displayed here. This could include information about the artist's background, musical style, and career highlights."
+          }
+        }
+      }
+    },
+    "library.artists.biography.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Biography"
+          }
+        }
+      }
+    },
     "library.artists.count %lld" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1575,28 +1567,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Import music files to see your artists here"
-          }
-        }
-      }
-    },
-    "library.artists.biography.placeholder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Artist biography will be displayed here. This could include information about the artist's background, musical style, and career highlights."
-          }
-        }
-      }
-    },
-    "library.artists.biography.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Biography"
           }
         }
       }
@@ -1756,6 +1726,17 @@
         }
       }
     },
+    "library.tracks.bitrate_per_second %@" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@/s"
+          }
+        }
+      }
+    },
     "library.tracks.count %lld" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1797,17 +1778,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Import music files to see your tracks here"
-          }
-        }
-      }
-    },
-    "library.tracks.bitrate_per_second %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%1$@/s"
           }
         }
       }
@@ -2636,9 +2606,6 @@
           }
         }
       }
-    },
-    "Supported formats: MP3, FLAC, M4A, WAV, AAC" : {
-
     },
     "table.column.album" : {
       "extractionState" : "manual",
