@@ -204,10 +204,10 @@ struct ArtistDetailView: View {
 
                         // Bio placeholder
                         VStack(alignment: .leading, spacing: theme.spacing.sm) {
-                            Text("Biography")
+                            Text(L10n.Library.artistBiographyTitle)
                                 .font(theme.typography.titleSmall)
 
-                            Text("Artist biography will be displayed here. This could include information about the artist's background, musical style, and career highlights.")
+                            Text(L10n.Library.artistBiographyPlaceholder)
                                 .font(theme.typography.bodyMedium)
                                 .foregroundStyle(theme.colors.textSecondary)
                                 .lineLimit(4)
