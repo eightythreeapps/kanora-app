@@ -10,6 +10,7 @@ import CoreData
 
 struct PlaylistsView: View {
     @Environment(\.managedObjectContext) private var viewContext
+    @ThemeAccess private var theme
 
     @FetchRequest(
         sortDescriptors: [NSSortDescriptor(keyPath: \Playlist.name, ascending: true)],
@@ -21,16 +22,16 @@ struct PlaylistsView: View {
         VStack {
             if playlists.isEmpty {
                 Spacer()
-                VStack(spacing: 12) {
+                VStack(spacing: theme.spacing.sm) {
                     Image(systemName: "music.note.list")
-                        .font(.system(size: 48))
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.headlineMedium)
+                        .foregroundStyle(theme.colors.textSecondary)
                     Text(L10n.Library.playlistsEmpty)
-                        .font(.headline)
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.titleSmall)
+                        .foregroundStyle(theme.colors.textSecondary)
                     Text(L10n.Library.playlistsEmptyMessage)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.bodySmall)
+                        .foregroundStyle(theme.colors.textSecondary)
                         .multilineTextAlignment(.center)
                 }
                 Spacer()
@@ -46,7 +47,7 @@ struct PlaylistsView: View {
                             .buttonStyle(.plain)
                         }
                     }
-                    .padding(.bottom, 100)
+                    .padding(.bottom, theme.spacing.xxxxl * 2)
                 }
             }
         }
@@ -67,42 +68,48 @@ struct PlaylistsView: View {
 
 struct PlaylistRowView: View {
     let playlist: Playlist
+    @ThemeAccess private var theme
 
     var body: some View {
-        HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 4)
-                .fill(Color.accentColor.opacity(0.2))
+        HStack(spacing: theme.spacing.sm) {
+            RoundedRectangle(cornerRadius: theme.effects.radiusXS)
+                .fill(theme.colors.accent.opacity(0.2))
                 .aspectRatio(1, contentMode: .fit)
                 .overlay {
                     Image(systemName: "music.note.list")
-                        .foregroundColor(.accentColor)
+                        .font(theme.typography.titleSmall)
+                        .foregroundStyle(theme.colors.accent)
                 }
 
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: theme.spacing.xxxs) {
                 Text(playlist.name ?? String(localized: "library.playlists.new"))
-                    .font(.headline)
+                    .font(theme.typography.titleSmall)
+                    .foregroundStyle(theme.colors.textPrimary)
 
                 Text(L10n.Library.trackCount(playlist.trackCount))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(theme.typography.labelSmall)
+                    .foregroundStyle(theme.colors.textSecondary)
             }
 
             Spacer()
         }
-        .padding(.horizontal)
-        .padding(.vertical, 8)
+        .padding(.horizontal, theme.spacing.md)
+        .padding(.vertical, theme.spacing.xs)
     }
 }
 
 struct PlaylistDetailView: View {
     let playlist: Playlist
+    @ThemeAccess private var theme
 
     var body: some View {
         VStack {
             Text(playlist.name ?? String(localized: "library.playlists.new"))
-                .font(.largeTitle)
+                .font(theme.typography.headlineLarge)
+                .foregroundStyle(theme.colors.textPrimary)
             Text(L10n.Placeholders.playlistDetailMessage)
-                .foregroundColor(.secondary)
+                .font(theme.typography.bodySmall)
+                .foregroundStyle(theme.colors.textSecondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .navigationTitle(playlist.name ?? String(localized: "navigation.playlists"))

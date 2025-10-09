@@ -18,6 +18,7 @@ struct TracksView: View {
     @Environment(\.managedObjectContext) private var viewContext
     @EnvironmentObject private var navigationState: NavigationState
     @EnvironmentObject private var playerViewModel: PlayerViewModel
+    @ThemeAccess private var theme
 
     @FetchRequest(
         sortDescriptors: [
@@ -74,31 +75,36 @@ struct TracksView: View {
                 TableColumn(L10n.TableColumns.number) { track in
                     if track.trackNumber > 0 {
                         Text("\(track.trackNumber)")
-                            .foregroundColor(.secondary)
+                            .font(theme.typography.bodySmall)
+                            .foregroundStyle(theme.colors.textSecondary)
                     }
                 }
                 .width(40)
 
                 TableColumn(L10n.TableColumns.title) { track in
                     Text(track.title ?? String(localized: "library.unknown_track"))
+                        .font(theme.typography.bodyMedium)
                 }
                 .width(min: 200)
 
                 TableColumn(L10n.TableColumns.artist) { track in
                     Text(track.album?.artist?.name ?? String(localized: "library.unknown_artist"))
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.bodySmall)
+                        .foregroundStyle(theme.colors.textSecondary)
                 }
                 .width(min: 150)
 
                 TableColumn(L10n.TableColumns.album) { track in
                     Text(track.album?.title ?? String(localized: "library.unknown_album"))
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.bodySmall)
+                        .foregroundStyle(theme.colors.textSecondary)
                 }
                 .width(min: 150)
 
                 TableColumn(L10n.TableColumns.duration) { track in
                     Text(track.durationFormatted)
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.bodySmall)
+                        .foregroundStyle(theme.colors.textSecondary)
                 }
                 .width(80)
             }
@@ -162,36 +168,42 @@ struct TracksView: View {
 
     private struct TrackRowCompact: View {
         let track: Track
+        @ThemeAccess private var theme
 
         var body: some View {
-            HStack(alignment: .firstTextBaseline, spacing: 12) {
+            HStack(alignment: .firstTextBaseline, spacing: theme.spacing.sm) {
                 if track.trackNumber > 0 {
                     Text("\(track.trackNumber)")
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.bodySmall)
+                        .foregroundStyle(theme.colors.textSecondary)
                         .monospacedDigit()
                 }
 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: theme.spacing.xxxs) {
                     Text(track.title ?? String(localized: "library.unknown_track"))
+                        .font(theme.typography.bodyMedium)
+                        .foregroundStyle(theme.colors.textPrimary)
                         .lineLimit(1)
                         .truncationMode(.tail)
 
                     Text("\(track.album?.artist?.name ?? String(localized: "library.unknown_artist")) • \(track.album?.title ?? String(localized: "library.unknown_album"))")
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.bodySmall)
+                        .foregroundStyle(theme.colors.textSecondary)
                         .lineLimit(1)
                         .truncationMode(.tail)
                 }
 
-                Spacer(minLength: 8)
+                Spacer(minLength: theme.spacing.xs)
 
                 Text(track.durationFormatted)
-                    .foregroundColor(.secondary)
+                    .font(theme.typography.bodySmall)
+                    .foregroundStyle(theme.colors.textSecondary)
                     .monospacedDigit()
                     .lineLimit(1)
             }
             .contentShape(Rectangle())
-            .padding(.horizontal)
-            .padding(.vertical, 8)
+            .padding(.horizontal, theme.spacing.md)
+            .padding(.vertical, theme.spacing.xs)
         }
     }
 
@@ -210,17 +222,17 @@ struct TracksView: View {
             // Tracks list
             if filteredTracks.isEmpty {
                 Spacer()
-                VStack(spacing: 12) {
+                VStack(spacing: theme.spacing.sm) {
                     Image(systemName: "music.note.list")
-                        .font(.system(size: 48))
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.headlineMedium)
+                        .foregroundStyle(theme.colors.textSecondary)
                     Text(searchText.isEmpty ? L10n.Library.tracksEmpty : L10n.Library.noResults)
-                        .font(.headline)
-                        .foregroundColor(.secondary)
+                        .font(theme.typography.titleSmall)
+                        .foregroundStyle(theme.colors.textSecondary)
                     if searchText.isEmpty {
                         Text(L10n.Library.tracksEmptyMessage)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .font(theme.typography.bodySmall)
+                            .foregroundStyle(theme.colors.textSecondary)
                             .multilineTextAlignment(.center)
                     }
                 }
@@ -231,7 +243,7 @@ struct TracksView: View {
                     // Add spacer for floating player
                     Rectangle()
                         .fill(Color.clear)
-                        .frame(height: 100)
+                        .frame(height: theme.spacing.xxxxl * 2)
                         .allowsHitTesting(false)
                 }
             }
@@ -240,8 +252,8 @@ struct TracksView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Text(L10n.Library.trackCount(filteredTracks.count))
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .font(theme.typography.bodySmall)
+                    .foregroundStyle(theme.colors.textSecondary)
             }
         }
 #if os(iOS)
