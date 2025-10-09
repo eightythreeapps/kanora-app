@@ -38,6 +38,7 @@ struct AppLogger {
         static let general: Category = "General"
         static let audioPlayer: Category = "AudioPlayerService"
         static let fileImport: Category = "FileImportService"
+        static let libraryService: Category = "LibraryService"
         static let importViewModel: Category = "ImportViewModel"
         static let persistence: Category = "Persistence"
         static let designSystem: Category = "DesignSystem"
@@ -89,6 +90,7 @@ struct AppLogger {
 extension AppLogger {
     static let audioPlayer = AppLogger(category: .audioPlayer)
     static let fileImport = AppLogger(category: .fileImport)
+    static let libraryService = AppLogger(category: .libraryService)
     static let importViewModel = AppLogger(category: .importViewModel)
     static let persistence = AppLogger(category: .persistence)
     static let designSystem = AppLogger(category: .designSystem)

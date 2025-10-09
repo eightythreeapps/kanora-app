@@ -14,11 +14,21 @@ class LibraryService: LibraryServiceProtocol {
     // MARK: - Properties
 
     private let persistence: PersistenceController
+    private let fileImportService: FileImportServiceProtocol
+    private let logger = AppLogger.libraryService
+    private let scanQueue = DispatchQueue(
+        label: "com.kanora.libraryservice.scan",
+        qos: .userInitiated
+    )
 
     // MARK: - Initialization
 
-    init(persistence: PersistenceController) {
+    init(
+        persistence: PersistenceController,
+        fileImportService: FileImportServiceProtocol? = nil
+    ) {
         self.persistence = persistence
+        self.fileImportService = fileImportService ?? FileImportService(persistence: persistence)
     }
 
     // MARK: - LibraryServiceProtocol
@@ -53,17 +63,75 @@ class LibraryService: LibraryServiceProtocol {
         in context: NSManagedObjectContext,
         progressHandler: ((Double) -> Void)?
     ) -> AnyPublisher<ScanProgress, Error> {
-        // TODO: Implement actual file scanning logic
-        // For now, return a mock publisher
-        return Future<ScanProgress, Error> { promise in
-            let progress = ScanProgress(
-                filesScanned: 0,
-                totalFiles: 0,
-                currentFile: nil,
-                percentage: 1.0
+        let subject = PassthroughSubject<ScanProgress, Error>()
+
+        guard let path = library.path, !path.isEmpty else {
+            logger.error("❌ Missing library path for library: \(library.objectID)")
+            subject.send(completion: .failure(LibraryServiceError.missingLibraryPath))
+            return subject.eraseToAnyPublisher()
+        }
+
+        let libraryID = library.objectID
+        let directoryURL = URL(fileURLWithPath: path, isDirectory: true)
+
+        var isDirectory: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: directoryURL.path, isDirectory: &isDirectory),
+              isDirectory.boolValue else {
+            logger.error("❌ Library path is not a directory: \(directoryURL.path)")
+            subject.send(
+                completion: .failure(
+                    LibraryServiceError.libraryDirectoryNotFound(directoryURL.path)
+                )
             )
-            promise(.success(progress))
-        }.eraseToAnyPublisher()
+            return subject.eraseToAnyPublisher()
+        }
+
+        scanQueue.async { [weak self] in
+            guard let self else { return }
+
+            self.logger.info("🚀 Starting scan for library at path: \(directoryURL.path)")
+
+            let audioFiles = self.fileImportService.scanDirectory(directoryURL)
+            let totalFiles = audioFiles.count
+
+            let initialProgress = ScanProgress(
+                filesScanned: 0,
+                totalFiles: totalFiles,
+                currentFile: nil,
+                percentage: totalFiles == 0 ? 1.0 : 0.0
+            )
+            self.publish(
+                progress: initialProgress,
+                to: subject,
+                handler: progressHandler
+            )
+
+            if totalFiles > 0 {
+                for (index, fileURL) in audioFiles.enumerated() {
+                    let filesScanned = index + 1
+                    let progress = ScanProgress(
+                        filesScanned: filesScanned,
+                        totalFiles: totalFiles,
+                        currentFile: fileURL.lastPathComponent,
+                        percentage: Double(filesScanned) / Double(totalFiles)
+                    )
+
+                    self.publish(
+                        progress: progress,
+                        to: subject,
+                        handler: progressHandler
+                    )
+                }
+            }
+
+            self.completeScan(
+                for: libraryID,
+                in: context,
+                subject: subject
+            )
+        }
+
+        return subject.eraseToAnyPublisher()
     }
 
     func deleteLibrary(
@@ -123,5 +191,66 @@ class LibraryService: LibraryServiceProtocol {
             totalSize: 0, // TODO: Calculate from actual file sizes
             lastScannedAt: library.lastScannedAt
         )
+    }
+
+    // MARK: - Private Helpers
+
+    private func publish(
+        progress: ScanProgress,
+        to subject: PassthroughSubject<ScanProgress, Error>,
+        handler: ((Double) -> Void)?
+    ) {
+        logger.debug(
+            "📡 Scan progress: \(progress.filesScanned)/\(progress.totalFiles) " +
+            "(\(Int(progress.percentage * 100))%)"
+        )
+
+        subject.send(progress)
+
+        if let handler = handler {
+            DispatchQueue.main.async {
+                handler(progress.percentage)
+            }
+        }
+    }
+
+    private func completeScan(
+        for libraryID: NSManagedObjectID,
+        in context: NSManagedObjectContext,
+        subject: PassthroughSubject<ScanProgress, Error>
+    ) {
+        context.perform { [weak self] in
+            guard let self else { return }
+
+            do {
+                if let managedLibrary = try context.existingObject(with: libraryID) as? Library {
+                    managedLibrary.updateLastScanned()
+                    try self.persistence.save(context: context)
+                } else {
+                    self.logger.warning("⚠️ Unable to cast managed object to Library for ID: \(libraryID)")
+                }
+
+                subject.send(completion: .finished)
+            } catch {
+                self.logger.error("❌ Failed to finalize library scan: \(error.localizedDescription)")
+                subject.send(completion: .failure(error))
+            }
+        }
+    }
+}
+
+// MARK: - LibraryServiceError
+
+enum LibraryServiceError: LocalizedError {
+    case missingLibraryPath
+    case libraryDirectoryNotFound(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .missingLibraryPath:
+            return "Library path is missing."
+        case .libraryDirectoryNotFound(let path):
+            return "Library directory not found at path: \(path)"
+        }
     }
 }

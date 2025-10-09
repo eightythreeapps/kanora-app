@@ -8,6 +8,7 @@
 import XCTest
 import CoreData
 import Combine
+import Foundation
 @testable import Kanora
 
 @MainActor
@@ -19,6 +20,7 @@ final class LibraryViewModelTests: XCTestCase {
     var context: NSManagedObjectContext!
     var testLibrary: Library!
     var cancellables: Set<AnyCancellable>!
+    var libraryDirectoryURL: URL!
 
     // MARK: - Setup & Teardown
 
@@ -36,10 +38,32 @@ final class LibraryViewModelTests: XCTestCase {
             context: context
         )
 
+        // Create temporary directory with audio files for scanning tests
+        libraryDirectoryURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("LibraryViewModelTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: libraryDirectoryURL, withIntermediateDirectories: true)
+
+        let audioFileURLs = [
+            libraryDirectoryURL.appendingPathComponent("track1.mp3"),
+            libraryDirectoryURL.appendingPathComponent("track2.flac")
+        ]
+
+        for url in audioFileURLs {
+            let created = FileManager.default.createFile(atPath: url.path, contents: Data(), attributes: nil)
+            XCTAssertTrue(created, "Failed to create test audio file at \(url.path)")
+        }
+
+        // Create a non-audio file to ensure it is ignored during scanning
+        _ = FileManager.default.createFile(
+            atPath: libraryDirectoryURL.appendingPathComponent("notes.txt").path,
+            contents: Data(),
+            attributes: nil
+        )
+
         // Create test library
         let library = Library(
             name: "Test Library",
-            path: "/Users/test/Music",
+            path: libraryDirectoryURL.path,
             user: user,
             context: context
         )
@@ -63,6 +87,10 @@ final class LibraryViewModelTests: XCTestCase {
         container = nil
         context = nil
         testLibrary = nil
+        if let directoryURL = libraryDirectoryURL {
+            try? FileManager.default.removeItem(at: directoryURL)
+            libraryDirectoryURL = nil
+        }
         try await super.tearDown()
     }
 
@@ -186,6 +214,39 @@ final class LibraryViewModelTests: XCTestCase {
 
         // Then loaded
         XCTAssertEqual(viewModel.viewState, .loaded)
+    }
+
+    func testScanLibraryPublishesProgress() async throws {
+        // Given
+        viewModel.loadLibraries()
+        try await Task.sleep(nanoseconds: 100_000_000)
+
+        let expectation = expectation(description: "Scan completes")
+        expectation.assertForOverFulfill = false
+
+        var progressUpdates: [ScanProgress] = []
+
+        viewModel.$scanProgress
+            .compactMap { $0 }
+            .sink { progress in
+                progressUpdates.append(progress)
+                if progress.isComplete {
+                    expectation.fulfill()
+                }
+            }
+            .store(in: &cancellables)
+
+        // When
+        viewModel.scanLibrary()
+
+        // Then
+        await fulfillment(of: [expectation], timeout: 2.0)
+
+        XCTAssertEqual(viewModel.viewState, .loaded)
+        XCTAssertEqual(progressUpdates.last?.percentage, 1.0, accuracy: 0.0001)
+        XCTAssertEqual(progressUpdates.last?.filesScanned, 2)
+        XCTAssertEqual(progressUpdates.last?.totalFiles, 2)
+        XCTAssertTrue(progressUpdates.contains { $0.percentage > 0 && $0.percentage < 1.0 })
     }
 }
 
